@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Jombs & Krombs · Expenses</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f7f5f0;
+    --surface: #ffffff;
+    --border: #e8e4dc;
+    --border-med: #d0ccc2;
+    --text: #1a1916;
+    --text-2: #6b6760;
+    --text-3: #a09d98;
+    --green: #1D9E75;
+    --green-bg: #e8f7f2;
+    --coral: #D85A30;
+    --coral-bg: #faece7;
+    --amber: #BA7517;
+    --amber-bg: #faeeda;
+    --blue: #185FA5;
+    --blue-bg: #e6f1fb;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  [data-theme="dark"] {
+    --bg: #111110;
+    --surface: #1c1c1a;
+    --border: #2a2a27;
+    --border-med: #3a3a36;
+    --text: #f0ede8;
+    --text-2: #9a9790;
+    --text-3: #5a5854;
+    --green: #2bbf8e;
+    --green-bg: #0d2b20;
+    --coral: #e8704a;
+    --coral-bg: #2b1a12;
+    --amber: #d4922a;
+    --amber-bg: #2a1e0a;
+    --blue: #4d8fd4;
+    --blue-bg: #0d1e30;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+  }
+
+  /* ─── Header ─── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+  header span {
+    font-size: 13px;
+    color: var(--text-3);
+  }
+  .sync-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #ccc;
+    margin-left: auto;
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  .sync-dot.connected { background: var(--green); }
+  .sync-dot.error { background: var(--coral); }
+
+  /* ─── Layout ─── */
+  main { max-width: 540px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+  /* ─── Balance card ─── */
+  .balance-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+  .balance-totals {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1rem;
+  }
+  .bal-col {
+    flex: 1;
+    text-align: center;
+    padding: 0 0.5rem;
+  }
+  .bal-col + .bal-col {
+    border-left: 1px solid var(--border);
+  }
+  .bal-label {
+    font-size: 10px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 2px;
+  }
+  .bal-name {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-3);
+    margin-bottom: 1px;
+  }
+  .bal-amount {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .balance-footer {
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .balance-msg {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.4;
+  }
+  .balance-msg strong { color: var(--text); font-weight: 500; }
+  .balance-msg .amount { color: var(--green); }
+  .balance-msg.settled { color: var(--green); font-size: 18px; }
+
+  /* ─── Buttons ─── */
+  .btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 7px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-med);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--bg); }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary {
+    background: #2e2d2a;
+    color: #f0ede8;
+    border-color: transparent;
+  }
+  [data-theme="dark"] .btn-primary {
+    background: #3a3a36;
+    color: #e8e4dc;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-full { width: 100%; padding: 11px; font-size: 14px; }
+  .btn-settle {
+    background: var(--green-bg);
+    color: var(--green);
+    border-color: transparent;
+  }
+  .btn-settle:hover { opacity: 0.85; background: var(--green-bg); }
+
+  /* ─── Add expense form ─── */
+  .add-btn-wrap { margin-bottom: 1.25rem; }
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+    animation: slideDown 0.18s ease;
+  }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .form-heading {
+    font-family: 'DM Serif Display', serif;
+    font-size: 16px;
+    font-weight: 400;
+    margin-bottom: 1rem;
+  }
+  .field { margin-bottom: 12px; }
+  .field label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 5px;
+  }
+  .field input, .field select {
+    width: 100%;
+    padding: 9px 12px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    border: 1px solid var(--border-med);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .field input:focus, .field select:focus { border-color: var(--text); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .split-slider-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .split-labels {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .split-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    min-width: 80px;
+  }
+  .split-name.right { text-align: right; }
+  .split-pct {
+    font-size: 13px;
+    color: var(--text-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .split-center {
+    font-size: 11px;
+    color: var(--text-3);
+    text-align: center;
+    flex: 1;
+  }
+  .split-track {
+    position: relative;
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    background: var(--border-med);
+  }
+  .split-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: var(--text);
+    border-radius: 3px;
+    transition: width 0.1s;
+  }
+  .split-slider-wrap input[type=range] {
+    width: 100%;
+    margin: 0;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+  }
+  .split-slider-wrap input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--text);
+    border: 2px solid var(--surface);
+    box-shadow: 0 0 0 1px var(--border-med);
+    cursor: pointer;
+    margin-top: -6px;
+  }
+  .split-slider-wrap input[type=range]::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 3px;
+  }
+  .split-inputs {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+  }
+  .split-input-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .split-input-wrap input {
+    width: 100%;
+    padding: 7px 10px;
+    font-size: 15px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    text-align: center;
+    border: 1px solid var(--border-med);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .split-input-wrap input:focus { border-color: var(--text); }
+  .split-input-label {
+    font-size: 11px;
+    color: var(--text-3);
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .split-divider {
+    font-size: 18px;
+    color: var(--text-3);
+    padding-bottom: 18px;
+  }
+  .form-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 16px;
+  }
+
+  .theme-btn {
+    margin-left: auto;
+    background: none;
+    border: 1px solid var(--border-med);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--text-2);
+    font-family: 'DM Sans', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background 0.15s;
+  }
+  .theme-btn:hover { background: var(--border); }
+
+  /* ─── Swipe / drag to delete ─── */
+  .swipe-wrapper {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-sm);
+  }
+  .delete-reveal {
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 80px;
+    background: var(--coral);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+  }
+  .delete-reveal.visible { transform: translateX(0); }
+  .delete-reveal span {
+    color: #fff;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+  }
+  .section-label {
+    font-size: 11px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .clear-all-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    color: var(--coral);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 0;
+    letter-spacing: 0.03em;
+    opacity: 0.8;
+  }
+  .clear-all-btn:hover { opacity: 1; text-decoration: underline; }
+  .expense-list { display: flex; flex-direction: column; gap: 5px; }
+  .expense-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: fadeIn 0.2s ease;
+    cursor: grab;
+    touch-action: pan-y;
+    transition: transform 0.25s ease, border-color 0.15s;
+    position: relative;
+    z-index: 1;
+    user-select: none;
+  }
+  .expense-item:hover { border-color: var(--border-med); }
+  .expense-item.swiped { transform: translateX(-80px); }
+  .del-btn {
+    background: none;
+    border: 1px solid var(--border-med);
+    border-radius: 50%;
+    width: 26px; height: 26px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: var(--text-3);
+    font-size: 14px;
+    line-height: 1;
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    padding: 0;
+  }
+  .del-btn:hover { background: var(--coral-bg); color: var(--coral); border-color: var(--coral); }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .exp-avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Serif Display', serif;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+  .exp-avatar.jombs { background: var(--blue-bg); color: var(--blue); }
+  .exp-avatar.krombs { background: var(--green-bg); color: var(--green); }
+  .exp-avatar.settle { background: var(--amber-bg); color: var(--amber); font-size: 13px; }
+
+  .exp-body { flex: 1; min-width: 0; }
+  .exp-desc {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .exp-meta { font-size: 12px; color: var(--text-3); margin-top: 1px; }
+
+  .exp-right { text-align: right; flex-shrink: 0; }
+  .exp-amount { font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .exp-split-label { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+
+  .settled-pill {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 20px;
+    background: var(--green-bg);
+    color: var(--green);
+    margin-left: 5px;
+    font-weight: 500;
+    vertical-align: middle;
+  }
+
+  .del-btn { display: none; }
+
+  .empty {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: var(--text-3);
+    font-size: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  .empty strong { display: block; font-size: 16px; color: var(--text-2); margin-bottom: 4px; font-weight: 500; }
+
+  /* ─── Loading ─── */
+  .loading {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-3);
+    font-size: 14px;
+  }
+
+  /* ─── Toast ─── */
+  #toast {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(60px);
+    background: var(--text);
+    color: #fff;
+    font-size: 13px;
+    padding: 8px 18px;
+    border-radius: 20px;
+    transition: transform 0.25s ease;
+    z-index: 100;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ─── Config overlay ─── */
+  #config-overlay {
+    position: fixed; inset: 0;
+    background: rgba(26,25,22,0.6);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 50;
+    padding: 1rem;
+  }
+  .config-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    max-width: 420px;
+    width: 100%;
+    border: 1px solid var(--border);
+  }
+  .config-card h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    font-weight: 400;
+    margin-bottom: 0.5rem;
+  }
+  .config-card p {
+    font-size: 13px;
+    color: var(--text-2);
+    line-height: 1.6;
+    margin-bottom: 1.25rem;
+  }
+  .config-card p a { color: var(--blue); }
+  .config-card .field { margin-bottom: 10px; }
+  .config-note {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 1rem;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<!-- Firebase config overlay (shown on first load) -->
+<div id="config-overlay">
+  <div class="config-card">
+    <h2>Connect to Firebase</h2>
+    <p>Paste your Firebase project config below. You only need to do this once — it'll be saved in your browser. See the setup guide in the README.</p>
+    <div class="field"><label>API Key</label><input id="cfg-apiKey" type="text" placeholder="AIza..." /></div>
+    <div class="field"><label>Project ID</label><input id="cfg-projectId" type="text" placeholder="my-project-id" /></div>
+    <div class="field"><label>App ID</label><input id="cfg-appId" type="text" placeholder="1:123456789:web:abc..." /></div>
+    <div style="display:flex;gap:8px;margin-top:1.25rem;">
+      <button class="btn btn-primary" style="flex:1;padding:10px;" onclick="saveConfig()">Connect</button>
+    </div>
+    <p class="config-note">Your config is stored only in this browser's localStorage. Data is synced via Firebase Firestore (free tier). Never share your config publicly.</p>
+  </div>
+</div>
+
+<header>
+  <h1>Jombs & Krombs</h1>
+  <span>expenses</span>
+  <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">☀ Light</button>
+  <div class="sync-dot" id="sync-dot" title="Connecting..." style="margin-left:10px"></div>
+</header>
+
+<main>
+  <div id="app"><div class="loading">Connecting...</div></div>
+</main>
+
+<div id="toast"></div>
+
+<!-- Firebase SDK (compat mode — works with simple script tags) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+// ─── Config ───────────────────────────────────────────────
+const CFG_KEY = 'jk_firebase_cfg';
+
+function loadConfig() {
+  try { return JSON.parse(localStorage.getItem(CFG_KEY)); } catch { return null; }
+}
+function saveConfig() {
+  const apiKey = document.getElementById('cfg-apiKey').value.trim();
+  const projectId = document.getElementById('cfg-projectId').value.trim();
+  const appId = document.getElementById('cfg-appId').value.trim();
+  if (!apiKey || !projectId || !appId) { toast('Please fill in all three fields'); return; }
+  const cfg = { apiKey, projectId, appId, authDomain: projectId + '.firebaseapp.com', storageBucket: projectId + '.appspot.com', messagingSenderId: '000000000000' };
+  localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+  document.getElementById('config-overlay').style.display = 'none';
+  initFirebase(cfg);
+}
+
+// ─── Firebase init ─────────────────────────────────────────
+let db, unsubscribe;
+let expenses = [];
+let formOpen = false;
+let splitPct = 50; // Jombs' share as integer 0–100
+
+function initFirebase(cfg) {
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(cfg);
+    db = firebase.firestore();
+    setSyncDot('connecting');
+
+    unsubscribe = db.collection('expenses')
+      .orderBy('createdAt', 'desc')
+      .onSnapshot(snap => {
+        expenses = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        setSyncDot('connected');
+        render();
+      }, err => {
+        console.error(err);
+        setSyncDot('error');
+        document.getElementById('app').innerHTML = `<div class="empty"><strong>Connection error</strong>${err.message}</div>`;
+      });
+  } catch(e) {
+    setSyncDot('error');
+    toast('Firebase error: ' + e.message);
+  }
+}
+
+function setSyncDot(state) {
+  const dot = document.getElementById('sync-dot');
+  dot.className = 'sync-dot';
+  if (state === 'connected') { dot.classList.add('connected'); dot.title = 'Connected'; }
+  else if (state === 'error') { dot.classList.add('error'); dot.title = 'Connection error'; }
+  else { dot.title = 'Connecting...'; }
+}
+
+// ─── Calculations ──────────────────────────────────────────
+function calcBalance() {
+  let jNet = 0, kNet = 0;
+  expenses.forEach(e => {
+    if (e.type === 'settle') {
+      if (e.payer === 'Jombs') kNet -= e.amount;
+      else jNet -= e.amount;
+      return;
+    }
+    // jombsPct: Jombs' share (0–100). Default 50 for old records with split='equal', 0 for 'full' (Jombs paid gift for Krombs)
+    let jPct;
+    if (typeof e.jombsPct === 'number') {
+      jPct = e.jombsPct;
+    } else if (e.split === 'equal') {
+      jPct = 50;
+    } else {
+      // 'full' gift — payer covers 100%, other owes 0 of their own share but payer covered it all
+      jPct = e.payer === 'Jombs' ? 0 : 100;
+    }
+    const jShare = +(e.amount * jPct / 100).toFixed(2);
+    const kShare = +(e.amount - jShare).toFixed(2);
+    if (e.payer === 'Jombs') {
+      // Jombs paid total; Krombs owes their share
+      kNet -= kShare;
+      jNet += kShare;
+    } else {
+      // Krombs paid total; Jombs owes their share
+      jNet -= jShare;
+      kNet += jShare;
+    }
+  });
+  return { jNet: +jNet.toFixed(2), kNet: +kNet.toFixed(2) };
+}
+
+function totalPaid(name) {
+  // Only count expenses since the most recent settlement (any settlement resets the period)
+  const lastSettleIdx = expenses.findIndex(e => e.type === 'settle');
+  const currentPeriod = lastSettleIdx === -1 ? expenses : expenses.slice(0, lastSettleIdx);
+  return currentPeriod
+    .filter(e => e.payer === name && e.type !== 'settle')
+    .reduce((s, e) => s + e.amount, 0);
+}
+
+function fmt(n) { return '£' + Math.abs(n).toFixed(2); }
+
+// ─── Render ────────────────────────────────────────────────
+function render() {
+  const { jNet, kNet } = calcBalance();
+
+  // Who owes who
+  let msg = '', canSettle = false, settler = '', recipient = '', settleAmt = 0;
+  const net = +kNet.toFixed(2); // positive = Krombs is owed, negative = Krombs owes
+  if (Math.abs(net) < 0.01) {
+    msg = `<span class="balance-msg settled">All settled up ✓</span>`;
+  } else if (net < 0) {
+    settleAmt = Math.abs(net);
+    settler = 'Krombs'; recipient = 'Jombs';
+    msg = `<span class="balance-msg"><strong>Krombs</strong> owes <strong>Jombs</strong> <span class="amount">${fmt(settleAmt)}</span></span>`;
+    canSettle = true;
+  } else {
+    settleAmt = net;
+    settler = 'Jombs'; recipient = 'Krombs';
+    msg = `<span class="balance-msg"><strong>Jombs</strong> owes <strong>Krombs</strong> <span class="amount">${fmt(settleAmt)}</span></span>`;
+    canSettle = true;
+  }
+
+  const formHtml = formOpen ? `
+    <div class="form-card">
+      <div class="form-heading">Add expense</div>
+      <div class="field"><label>Description</label><input id="f-desc" type="text" placeholder="e.g. Groceries" /></div>
+      <div class="form-row">
+        <div class="field"><label>Amount (£)</label><input id="f-amount" type="number" min="0.01" step="0.01" placeholder="0.00" /></div>
+        <div class="field"><label>Paid by</label>
+          <select id="f-payer">
+            <option value="Jombs">Jombs</option>
+            <option value="Krombs">Krombs</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Split</label>
+        <div class="split-slider-wrap">
+          <div class="split-labels">
+            <span class="split-name">Jombs</span>
+            <span class="split-center" id="split-center-label">${splitPct === 50 ? '50 / 50' : splitPct + ' / ' + (100-splitPct)}</span>
+            <span class="split-name right">Krombs</span>
+          </div>
+          <div class="split-track"><div class="split-fill" id="split-fill" style="width:${splitPct}%"></div></div>
+          <input type="range" min="0" max="100" step="1" value="${splitPct}" oninput="updateSplit(this.value)" />
+          <div class="split-inputs">
+            <div class="split-input-wrap">
+              <input type="number" id="split-j" min="0" max="100" value="${splitPct}" oninput="updateSplitFromJ(this.value)" />
+              <span class="split-input-label">Jombs %</span>
+            </div>
+            <div class="split-divider">/</div>
+            <div class="split-input-wrap">
+              <input type="number" id="split-k" min="0" max="100" value="${100-splitPct}" oninput="updateSplitFromK(this.value)" />
+              <span class="split-input-label">Krombs %</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn" onclick="closeForm()">Cancel</button>
+        <button class="btn btn-primary" onclick="addExpense()">Save</button>
+      </div>
+    </div>` : `
+    <div class="add-btn-wrap">
+      <button class="btn btn-primary btn-full" onclick="openForm()">+ Add expense</button>
+    </div>`;
+
+  const listHtml = expenses.length === 0
+    ? `<div class="empty"><strong>No expenses yet</strong>Add your first one above.</div>`
+    : expenses.map(e => renderItem(e)).join('');
+
+  document.getElementById('app').innerHTML = `
+    <div class="balance-card">
+      <div class="balance-totals">
+        <div class="bal-col">
+          <div class="bal-label">Total paid</div>
+          <div class="bal-name">Jombs</div>
+          <div class="bal-amount">${fmt(totalPaid('Jombs'))}</div>
+        </div>
+        <div class="bal-col">
+          <div class="bal-label">Total paid</div>
+          <div class="bal-name">Krombs</div>
+          <div class="bal-amount">${fmt(totalPaid('Krombs'))}</div>
+        </div>
+      </div>
+      <div class="balance-footer">
+        ${msg}
+        ${canSettle ? `<button class="btn btn-settle" onclick="recordSettle('${settler}','${recipient}',${settleAmt})">Settle up</button>` : ''}
+      </div>
+    </div>
+    ${formHtml}
+    ${!formOpen ? `<div class="section-header"><span class="section-label">History</span>${expenses.length > 0 ? `<button class="clear-all-btn" onclick="clearAll()">Clear all</button>` : ''}</div><div class="expense-list">${listHtml}</div>` : ''}
+  `;
+
+  if (formOpen) setTimeout(() => { const el = document.getElementById('f-desc'); if (el) el.focus(); }, 50);
+  setTimeout(attachSwipeHandlers, 0);
+}
+
+function renderItem(e) {
+  const isSettle = e.type === 'settle';
+  const avatarClass = isSettle ? 'settle' : e.payer.toLowerCase();
+  const avatarText = isSettle ? '↔' : e.payer[0];
+  const meta = isSettle
+    ? `${e.payer} → ${e.recipient} · ${e.date}`
+    : `${e.payer} · ${e.date}`;
+
+  let splitLabel = '';
+  if (!isSettle) {
+    let jPct;
+    if (typeof e.jombsPct === 'number') jPct = e.jombsPct;
+    else if (e.split === 'equal') jPct = 50;
+    else jPct = e.payer === 'Jombs' ? 0 : 100;
+    const kPct = 100 - jPct;
+    if (jPct === 0) splitLabel = e.payer === 'Jombs' ? 'Gift (Jombs covered all)' : 'Gift (Krombs covered all)';
+    else if (jPct === 100) splitLabel = 'Jombs 100%';
+    else if (jPct === 50) splitLabel = 'Split 50/50';
+    else splitLabel = `Jombs ${jPct}% · Krombs ${kPct}%`;
+  }
+
+  const descHtml = isSettle
+    ? `${e.payer} settled up <span class="settled-pill">settled</span>`
+    : e.desc;
+
+  return `<div class="swipe-wrapper" data-id="${e.id}">
+    <div class="delete-reveal" onclick="confirmDelete('${e.id}')"><span>Delete</span></div>
+    <div class="expense-item" data-id="${e.id}">
+      <div class="exp-avatar ${avatarClass}">${avatarText}</div>
+      <div class="exp-body">
+        <div class="exp-desc">${descHtml}</div>
+        <div class="exp-meta">${meta}</div>
+      </div>
+      <div class="exp-right">
+        <div class="exp-amount">${fmt(e.amount)}</div>
+        ${splitLabel ? `<div class="exp-split-label">${splitLabel}</div>` : ''}
+      </div>
+      <button class="del-btn" onclick="confirmDelete('${e.id}')" title="Delete">×</button>
+    </div>
+  </div>`;
+}
+
+// ─── Actions ───────────────────────────────────────────────
+function openForm() { formOpen = true; splitPct = 50; render(); }
+function closeForm() { formOpen = false; render(); }
+
+function updateSplit(val) {
+  splitPct = Math.min(100, Math.max(0, +val));
+  const fill = document.getElementById('split-fill');
+  const label = document.getElementById('split-center-label');
+  const slider = document.querySelector('.split-slider-wrap input[type=range]');
+  const jInput = document.getElementById('split-j');
+  const kInput = document.getElementById('split-k');
+  if (fill) fill.style.width = splitPct + '%';
+  if (label) label.textContent = splitPct === 50 ? '50 / 50' : splitPct + ' / ' + (100 - splitPct);
+  if (slider) slider.value = splitPct;
+  if (jInput) jInput.value = splitPct;
+  if (kInput) kInput.value = 100 - splitPct;
+}
+
+function updateSplitFromJ(val) {
+  let v = parseInt(val);
+  if (isNaN(v)) return;
+  v = Math.min(100, Math.max(0, v));
+  updateSplit(v);
+}
+
+function updateSplitFromK(val) {
+  let v = parseInt(val);
+  if (isNaN(v)) return;
+  v = Math.min(100, Math.max(0, v));
+  updateSplit(100 - v);
+}
+
+async function addExpense() {
+  const desc = (document.getElementById('f-desc').value || '').trim();
+  const amount = parseFloat(document.getElementById('f-amount').value);
+  const payer = document.getElementById('f-payer').value;
+  if (!desc || isNaN(amount) || amount <= 0) {
+    document.getElementById('f-desc').focus();
+    toast('Please fill in description and amount');
+    return;
+  }
+  const entry = {
+    type: 'expense',
+    desc,
+    amount: +amount.toFixed(2),
+    payer,
+    jombsPct: splitPct,
+    date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  try {
+    await db.collection('expenses').add(entry);
+    formOpen = false;
+    toast('Expense added');
+  } catch(e) { toast('Error: ' + e.message); }
+}
+
+async function deleteExpense(id) {
+  if (!confirm('Remove this entry?')) return;
+  try {
+    await db.collection('expenses').doc(id).delete();
+    toast('Removed');
+  } catch(e) { toast('Error: ' + e.message); }
+}
+
+async function clearAll() {
+  if (!confirm('Delete ALL entries? This cannot be undone.')) return;
+  try {
+    const snap = await db.collection('expenses').get();
+    const batch = db.batch();
+    snap.docs.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+    toast('All entries cleared');
+  } catch(e) { toast('Error: ' + e.message); }
+}
+
+async function recordSettle(payer, recipient, amount) {
+  if (!confirm(`Record ${payer} paying ${recipient} ${fmt(amount)}?`)) return;
+  try {
+    await db.collection('expenses').add({
+      type: 'settle',
+      payer,
+      recipient,
+      amount: +amount.toFixed(2),
+      date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    toast('Settlement recorded');
+  } catch(e) { toast('Error: ' + e.message); }
+}
+
+// ─── Toast ─────────────────────────────────────────────────
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ─── Theme ─────────────────────────────────────────────────
+const THEME_KEY = 'jk_theme';
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = document.getElementById('theme-btn');
+  if (btn) btn.textContent = theme === 'dark' ? '☀ Light' : '☾ Dark';
+  localStorage.setItem(THEME_KEY, theme);
+}
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+// Apply saved or system preference on load
+(function() {
+  const saved = localStorage.getItem(THEME_KEY);
+  if (saved) { applyTheme(saved); return; }
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) applyTheme('dark');
+})();
+
+// ─── Swipe to delete ───────────────────────────────────────
+let activeSwipe = null;
+
+function attachSwipeHandlers() {
+  document.querySelectorAll('.expense-item').forEach(item => {
+    if (item._swipeAttached) return;
+    item._swipeAttached = true;
+
+    let startX = 0, startY = 0, moving = false, isTouch = false;
+
+    function onStart(clientX, clientY, touch) {
+      startX = clientX; startY = clientY; moving = false; isTouch = touch;
+    }
+    function onMove(clientX, clientY) {
+      const dx = clientX - startX;
+      const dy = clientY - startY;
+      if (!moving && Math.abs(dy) > Math.abs(dx) && isTouch) return;
+      moving = true;
+    }
+    function onEnd(clientX) {
+      if (!moving) return;
+      const dx = clientX - startX;
+      const wrapper = item.closest('.swipe-wrapper');
+      const reveal = wrapper ? wrapper.querySelector('.delete-reveal') : null;
+      if (dx < -40) {
+        if (activeSwipe && activeSwipe !== item) closeSwipe(activeSwipe);
+        item.classList.add('swiped');
+        if (reveal) reveal.classList.add('visible');
+        activeSwipe = item;
+      } else if (dx > 15) {
+        closeSwipe(item);
+      }
+    }
+
+    // Touch
+    item.addEventListener('touchstart', e => onStart(e.touches[0].clientX, e.touches[0].clientY, true), { passive: true });
+    item.addEventListener('touchmove', e => onMove(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+    item.addEventListener('touchend', e => onEnd(e.changedTouches[0].clientX), { passive: true });
+
+    // Mouse (desktop drag)
+    item.addEventListener('mousedown', e => {
+      if (e.button !== 0) return;
+      onStart(e.clientX, e.clientY, false);
+      const onMM = ev => onMove(ev.clientX, ev.clientY);
+      const onMU = ev => { onEnd(ev.clientX); document.removeEventListener('mousemove', onMM); document.removeEventListener('mouseup', onMU); };
+      document.addEventListener('mousemove', onMM);
+      document.addEventListener('mouseup', onMU);
+    });
+  });
+
+  // Click/touch outside closes open swipe
+  document.addEventListener('mousedown', e => {
+    if (activeSwipe && !activeSwipe.closest('.swipe-wrapper').contains(e.target)) closeSwipe(activeSwipe);
+  });
+  document.addEventListener('touchstart', e => {
+    if (activeSwipe && !activeSwipe.closest('.swipe-wrapper').contains(e.target)) closeSwipe(activeSwipe);
+  }, { passive: true });
+}
+
+function closeSwipe(item) {
+  if (!item) return;
+  item.classList.remove('swiped');
+  const reveal = item.closest('.swipe-wrapper')?.querySelector('.delete-reveal');
+  if (reveal) reveal.classList.remove('visible');
+  if (activeSwipe === item) activeSwipe = null;
+}
+
+async function confirmDelete(id) {
+  if (!confirm('Remove this entry?')) {
+    const item = document.querySelector(`.expense-item[data-id="${id}"]`);
+    if (item) closeSwipe(item);
+    return;
+  }
+  try {
+    await db.collection('expenses').doc(id).delete();
+    toast('Removed');
+  } catch(e) { toast('Error: ' + e.message); }
+}
+
+// ─── Boot ──────────────────────────────────────────────────
+// Sync theme button label on every render since header is static
+const _origRender = render;
+window.render = function() { _origRender(); const t = document.documentElement.getAttribute('data-theme')||'light'; const btn=document.getElementById('theme-btn'); if(btn) btn.textContent = t==='dark'?'☀ Light':'☾ Dark'; };
+const savedCfg = loadConfig();
+if (savedCfg) {
+  document.getElementById('config-overlay').style.display = 'none';
+  initFirebase(savedCfg);
+}
+</script>
+</body>
+</html>
