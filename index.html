@@ -26,7 +26,7 @@ header { background: var(--surface); border-bottom: 1px solid var(--border); pad
 header h1 { font-family: 'DM Serif Display', serif; font-size: 20px; font-weight: 400; letter-spacing: -0.01em; }
 header .sub { font-size: 12px; color: var(--text-3); }
 .header-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
-.theme-btn { background: none; border: 1px solid var(--border-med); border-radius: 20px; padding: 4px 10px; font-size: 12px; cursor: pointer; color: var(--text-2); font-family: 'DM Sans', sans-serif; transition: background 0.15s; }
+
 .theme-btn:hover { background: var(--border); }
 .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #ccc; transition: background 0.3s; flex-shrink: 0; }
 .sync-dot.connected { background: var(--green); }
@@ -90,13 +90,24 @@ main { max-width: 540px; margin: 0 auto; padding: 1.25rem 1rem 4rem; }
 .split-input-label { font-size: 11px; color: var(--text-3); text-align: center; text-transform: uppercase; letter-spacing: 0.05em; }
 .split-divider { font-size: 18px; color: var(--text-3); padding-bottom: 18px; }
 
-.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.tab-bar { display: flex; gap: 0; margin-bottom: 1.25rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.tab-btn { flex: 1; padding: 10px; font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif; background: transparent; border: none; cursor: pointer; color: var(--text-3); transition: all 0.15s; }
+.tab-btn.active { background: var(--text); color: var(--bg); }
+.history-readonly { display: flex; flex-direction: column; gap: 5px; }
+.history-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+.hist-action { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 6px; border-radius: 4px; font-weight: 500; flex-shrink: 0; }
+.hist-action.added { background: var(--green-bg); color: var(--green); }
+.hist-action.deleted { background: var(--coral-bg); color: var(--coral); }
+.hist-action.settled { background: var(--amber-bg); color: var(--amber); }
+.hist-action.edited { background: var(--blue-bg); color: var(--blue); }
 .section-label { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; }
 .section-actions { display: flex; gap: 12px; align-items: center; }
 .text-btn { font-family: 'DM Sans', sans-serif; font-size: 11px; background: none; border: none; cursor: pointer; padding: 2px 0; letter-spacing: 0.03em; }
 .text-btn.blue { color: var(--blue); }
 .text-btn.red { color: var(--coral); }
+.text-btn.muted { color: var(--text-3); font-size: 12px; }
 .text-btn:hover { text-decoration: underline; }
+.export-row { text-align: center; padding: 1.25rem 0 0.5rem; }
 
 .expense-list { display: flex; flex-direction: column; gap: 5px; }
 
@@ -182,6 +193,7 @@ main { max-width: 540px; margin: 0 auto; padding: 1.25rem 1rem 4rem; }
   <h1>Jombs & Krombs</h1>
   <span class="sub">expenses</span>
   <div class="header-right">
+    <button class="theme-btn" id="notif-btn" title="Notifications">🔕</button>
     <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">☾ Dark</button>
     <div class="sync-dot" id="sync-dot" title="Connecting..."></div>
   </div>
@@ -237,7 +249,7 @@ function saveConfig() {
 }
 
 // ── State ───────────────────────────────────────────────────
-let db, expenses = [], formOpen = false, editingId = null, splitPct = 50, collapsedMonths = {};
+let db, expenses = [], historyEntries = [], formOpen = false, editingId = null, splitPct = 50, collapsedMonths = {}, activeTab = 'live';
 
 // ── Firebase ────────────────────────────────────────────────
 function initFirebase(cfg) {
@@ -247,8 +259,13 @@ function initFirebase(cfg) {
     setSyncDot('connecting');
     db.collection('expenses').orderBy('createdAt','desc').onSnapshot(snap => {
       expenses = snap.docs.map(d => ({id:d.id,...d.data()}));
+      checkNewEntries(expenses);
       setSyncDot('connected'); render();
     }, err => { setSyncDot('error'); document.getElementById('app').innerHTML=`<div class="empty"><strong>Connection error</strong>${err.message}</div>`; });
+    db.collection('history').orderBy('createdAt','desc').onSnapshot(snap => {
+      historyEntries = snap.docs.map(d => ({id:d.id,...d.data()}));
+      render();
+    }, err => console.warn('History listener error:', err.message));
   } catch(e) { setSyncDot('error'); toast('Firebase error: '+e.message); }
 }
 function setSyncDot(s) {
@@ -274,6 +291,11 @@ function totalPaid(name) {
 }
 function lastPaidBy() { const l=expenses.find(e=>e.type==='expense'); return l?l.payer:null; }
 function fmt(n) { return '£'+Math.abs(n).toFixed(2); }
+function writeHistory(data) {
+  if(!db) return;
+  db.collection('history').add({...data, createdAt: firebase.firestore.FieldValue.serverTimestamp()})
+    .catch(e => console.warn('History write failed:', e.message));
+}
 function mkSplitLabel(e) {
   const j=getJPct(e),k=100-j;
   if(j===0) return e.payer==='Jombs'?'Gift (J covered all)':'Gift (K covered all)';
@@ -302,11 +324,10 @@ function render() {
   const last=lastPaidBy();
   const lastHtml=last?`<div class="last-paid">Last paid by <strong>${last}</strong></div>`:'';
 
-  // Group by month
+  // Live tab — group by month
   const groups={};
   expenses.forEach(e=>{const k=e.monthKey||e.date||'?';if(!groups[k])groups[k]=[];groups[k].push(e);});
   const monthKeys=Object.keys(groups);
-
   let listHtml='';
   if(expenses.length===0){
     listHtml=`<div class="empty"><strong>No expenses yet</strong>Add your first one above.</div>`;
@@ -329,16 +350,50 @@ function render() {
     }).join('');
   }
 
-  const formHtml=formOpen?renderForm():`<div class="add-btn-wrap"><button class="btn btn-primary btn-full" onclick="openForm()">+ Add expense</button></div>`;
-  const historySection=formOpen?'': `
+  // Permanent history tab
+  const histHtml = historyEntries.length === 0
+    ? `<div class="empty"><strong>No history yet</strong>Entries appear here as you add them.</div>`
+    : historyEntries.map(e => {
+        const action = e.action || (e.type === 'settle' ? 'settled' : 'added');
+        const desc = e.type === 'settle'
+          ? `${e.payer} settled up → ${e.recipient}`
+          : (e.desc || '—');
+        const meta = [e.payer, e.date, e.monthKey].filter(Boolean).join(' · ');
+        const splitLabel = e.type !== 'settle' ? mkSplitLabel(e) : '';
+        return `<div class="history-item">
+          <span class="hist-action ${action}">${action}</span>
+          <div class="exp-body">
+            <div class="exp-desc">${desc}</div>
+            <div class="exp-meta">${meta}${splitLabel ? ' · ' + splitLabel : ''}</div>
+          </div>
+          <div class="exp-right">
+            <div class="exp-amount">${fmt(e.amount)}</div>
+          </div>
+          <button class="icon-btn del" onclick="deleteHistoryEntry('${e.id}')" title="Delete">×</button>
+        </div>`;
+      }).join('');
+
+  const tabBar = `<div class="tab-bar">
+    <button class="tab-btn${activeTab==='live'?' active':''}" onclick="setTab('live')">Live</button>
+    <button class="tab-btn${activeTab==='history'?' active':''}" onclick="setTab('history')">All time</button>
+  </div>`;
+
+  const formHtml = formOpen ? renderForm() : `<div class="add-btn-wrap"><button class="btn btn-primary btn-full" onclick="openForm()">+ Add expense</button></div>`;
+
+  const liveSection = formOpen ? '' : `
     <div class="section-header">
-      <span class="section-label">History</span>
-      ${expenses.length>0?`<div class="section-actions">
-        <button class="text-btn blue" onclick="exportCSV()">Export CSV</button>
-        <button class="text-btn red" onclick="clearAll()">Clear all</button>
-      </div>`:''}
+      <span class="section-label">This period</span>
+      ${expenses.length>0?`<div class="section-actions"><button class="text-btn red" onclick="clearAll()">Clear all</button></div>`:''}
     </div>
-    <div class="expense-list">${listHtml}</div>`;
+    <div class="expense-list">${listHtml}</div>
+    ${expenses.length>0?`<div class="export-row"><button class="text-btn muted" onclick="exportCSV()">↓ Export CSV</button></div>`:''}`;
+
+  const historySection = `
+    <div class="section-header">
+      <span class="section-label">Permanent record</span>
+      <span class="section-label" style="color:var(--text-3);font-size:10px;">tap × to remove</span>
+    </div>
+    <div class="history-readonly">${histHtml}</div>`;
 
   document.getElementById('app').innerHTML=`
     <div class="balance-card">
@@ -351,12 +406,20 @@ function render() {
         ${canSettle?`<button class="btn btn-settle" onclick="promptSettle('${settler}','${recipient}',${settleAmt})">Settle up</button>`:''}
       </div>
     </div>
-    ${formHtml}${historySection}`;
+    ${formHtml}
+    ${!formOpen ? tabBar : ''}
+    ${!formOpen && activeTab==='live' ? liveSection : ''}
+    ${!formOpen && activeTab==='history' ? historySection : ''}`;
 
   if(formOpen)setTimeout(()=>{const el=document.getElementById('f-desc');if(el)el.focus();},50);
   setTimeout(attachSwipeHandlers,0);
   const t=document.documentElement.getAttribute('data-theme')||'light';
   const btn=document.getElementById('theme-btn');
+  if(btn)btn.textContent=t==='dark'?'☀ Light':'☾ Dark';
+  renderNotifBtn();
+}
+
+function setTab(tab) { activeTab = tab; haptic('light'); render(); }
   if(btn)btn.textContent=t==='dark'?'☀ Light':'☾ Dark';
 }
 
@@ -479,6 +542,7 @@ async function addExpense() {
       monthKey:curMonthKey(),
       createdAt:firebase.firestore.FieldValue.serverTimestamp()
     });
+    writeHistory({action:'added',type:'expense',desc,amount:+amount.toFixed(2),payer,jombsPct:splitPct,note:note||'',date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'}),monthKey:curMonthKey()});
     formOpen=false; haptic('success'); toast('Expense added');
   }catch(e){toast('Error: '+e.message);}
 }
@@ -492,6 +556,7 @@ async function saveEdit() {
       desc,amount:+amount.toFixed(2),payer,jombsPct:splitPct,note:note||'',
       date:orig?.date||new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'})
     });
+    writeHistory({action:'edited',type:'expense',desc,amount:+amount.toFixed(2),payer,jombsPct:splitPct,note:note||'',date:orig?.date||new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'}),monthKey:orig?.monthKey||curMonthKey()});
     formOpen=false;editingId=null;haptic('success');toast('Saved');
   }catch(e){toast('Error: '+e.message);}
 }
@@ -503,7 +568,7 @@ function promptDelete(id) {
   showModal({
     title:'Delete entry',body:`Remove ${label}? This can't be undone.`,
     confirm:'Delete',cancel:'Keep it',danger:true,
-    onConfirm:async()=>{try{await db.collection('expenses').doc(id).delete();haptic('medium');toast('Removed');}catch(err){toast('Error: '+err.message);}},
+    onConfirm:async()=>{try{const snap=await db.collection('expenses').doc(id).get();if(snap.exists)writeHistory({action:'deleted',...snap.data()});await db.collection('expenses').doc(id).delete();haptic('medium');toast('Removed');}catch(err){toast('Error: '+err.message);}},
     onCancel:()=>{const item=document.querySelector(`.expense-item[data-id="${id}"]`);if(item)closeSwipe(item);}
   });
 }
@@ -522,10 +587,20 @@ function promptSettle(payer,recipient,amount) {
           monthKey:curMonthKey(),
           createdAt:firebase.firestore.FieldValue.serverTimestamp()
         });
+        writeHistory({action:'settled',type:'settle',payer,recipient,amount:+amount.toFixed(2),date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'}),monthKey:curMonthKey()});
         haptic('success');toast('Settlement recorded');
       }catch(e){toast('Error: '+e.message);}
     }
   });
+}
+
+async function deleteHistoryEntry(id) {
+  haptic('warning');
+  try {
+    await db.collection('history').doc(id).delete();
+    haptic('medium');
+    toast('Entry removed from history');
+  } catch(e) { toast('Error: ' + e.message); }
 }
 
 function clearAll() {
@@ -601,9 +676,75 @@ function attachSwipeHandlers(){
 }
 function closeSwipe(item){if(!item)return;item.classList.remove('swiped');item.closest('.swipe-wrapper')?.querySelector('.delete-reveal')?.classList.remove('visible');if(activeSwipe===item)activeSwipe=null;}
 
+// ── Notifications ───────────────────────────────────────────
+const NOTIF_KEY = 'jk_notify_enabled';
+let notifEnabled = localStorage.getItem(NOTIF_KEY) === 'true';
+let knownIds = new Set();
+let firstLoad = true;
+
+function notifSupported() { return 'Notification' in window; }
+
+async function requestNotifPermission() {
+  if (!notifSupported()) { toast('Notifications not supported in this browser'); return; }
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') {
+    notifEnabled = true;
+    localStorage.setItem(NOTIF_KEY, 'true');
+    toast('Notifications on ✓');
+    renderNotifBtn();
+  } else {
+    toast('Permission denied — check browser settings');
+  }
+}
+
+function disableNotifs() {
+  notifEnabled = false;
+  localStorage.setItem(NOTIF_KEY, 'false');
+  toast('Notifications off');
+  renderNotifBtn();
+}
+
+function renderNotifBtn() {
+  const btn = document.getElementById('notif-btn');
+  if (!btn || !notifSupported()) return;
+  if (Notification.permission === 'granted' && notifEnabled) {
+    btn.textContent = '🔔';
+    btn.title = 'Notifications on — tap to turn off';
+    btn.onclick = disableNotifs;
+  } else {
+    btn.textContent = '🔕';
+    btn.title = 'Tap to enable notifications';
+    btn.onclick = requestNotifPermission;
+  }
+}
+
+function fireNotif(title, body) {
+  if (!notifEnabled || Notification.permission !== 'granted') return;
+  new Notification(title, { body, icon: 'https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f4b0.png', badge: 'https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f4b0.png' });
+}
+
+function checkNewEntries(incoming) {
+  if (firstLoad) {
+    incoming.forEach(e => knownIds.add(e.id));
+    firstLoad = false;
+    return;
+  }
+  incoming.forEach(e => {
+    if (knownIds.has(e.id)) return;
+    knownIds.add(e.id);
+    if (e.type === 'settle') {
+      fireNotif('💸 Settled up!', `${e.payer} marked the balance as settled (${fmt(e.amount)})`);
+    } else {
+      const j = getJPct(e), splitStr = j === 50 ? '50/50' : `${j}/${100-j}`;
+      fireNotif(`🧾 New expense from ${e.payer}`, `${e.desc} — ${fmt(e.amount)} (split ${splitStr})`);
+    }
+  });
+}
+
 // ── Boot ────────────────────────────────────────────────────
 const savedCfg=loadConfig();
 if(savedCfg){document.getElementById('config-overlay').style.display='none';initFirebase(savedCfg);}
+setTimeout(renderNotifBtn, 0);
 </script>
 </body>
 </html>
