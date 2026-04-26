@@ -305,8 +305,7 @@ function calcBalance() {
   return{jNet:+jNet.toFixed(2),kNet:+kNet.toFixed(2)};
 }
 function totalPaid(name) {
-  const idx=expenses.findIndex(e=>e.type==='settle');
-  return (idx===-1?expenses:expenses.slice(0,idx)).filter(e=>e.payer===name&&e.type!=='settle').reduce((s,e)=>s+e.amount,0);
+  return expenses.filter(e=>e.payer===name&&e.type!=='settle').reduce((s,e)=>s+e.amount,0);
 }
 function lastPaidBy() { const l=expenses.find(e=>e.type==='expense'); return l?l.payer:null; }
 function fmt(n) { return '£'+Math.abs(n).toFixed(2); }
@@ -584,19 +583,26 @@ function promptSettle(payer,recipient,amount) {
   haptic('medium');
   showModal({
     title:'Settle up',
-    body:`Record <strong>${payer}</strong> paying <strong>${recipient}</strong> <strong>${fmt(amount)}</strong>? This resets the running balance.`,
+    body:`Record <strong>${payer}</strong> paying <strong>${recipient}</strong> <strong>${fmt(amount)}</strong>? All current expenses will be archived to the log and the tracker resets to zero.`,
     confirm:'Yes, settle up',cancel:'Not yet',
     onConfirm:async()=>{
       try{
-        await db.collection('expenses').add({
-          type:'settle',payer,recipient,amount:+amount.toFixed(2),
-          date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'}),
-          monthKey:curMonthKey(),
-          createdAt:firebase.firestore.FieldValue.serverTimestamp()
+        const date=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+        const mKey=curMonthKey();
+        const ts=firebase.firestore.FieldValue.serverTimestamp();
+        const snap=await db.collection('expenses').get();
+        const batch=db.batch();
+        snap.docs.forEach(d=>batch.delete(d.ref));
+        snap.docs.forEach(d=>{
+          const e=d.data();
+          const histRef=db.collection('history').doc();
+          batch.set(histRef,{...e,action:'archived',createdAt:ts});
         });
-        writeHistory({action:'settled',type:'settle',payer,recipient,amount:+amount.toFixed(2),date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'}),monthKey:curMonthKey()});
-        haptic('success');toast('Settlement recorded');
-      }catch(e){toast('Error: '+e.message);}
+        const settleRef=db.collection('history').doc();
+        batch.set(settleRef,{action:'settled',type:'settle',payer,recipient,amount:+amount.toFixed(2),date,monthKey:mKey,createdAt:ts});
+        await batch.commit();
+        haptic('success');toast('Settled up — slate is clean');
+      }catch(e){toast('Error: '+e.message);console.error(e);}
     }
   });
 }
