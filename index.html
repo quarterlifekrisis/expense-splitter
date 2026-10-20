@@ -78,34 +78,36 @@ header {
   z-index: 20;
   background: rgba(248, 249, 250, 0.85);
   border-bottom: 1px solid var(--border);
+  padding: max(0.85rem, env(safe-area-inset-top)) 1.25rem 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
-  overflow: hidden;
 }
 [data-theme="dark"] header {
   background: rgba(11, 12, 14, 0.85);
 }
 header.scrolled {
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
 }
 
-.header-top-row {
+.header-left {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: max(0.85rem, env(safe-area-inset-top)) 1.25rem 0.85rem;
+  position: relative;
+  min-height: 38px;
+}
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   will-change: transform, opacity;
   transform: translate3d(0, 0, 0);
   transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
-}
-
-.brand {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
 }
 .brand-title {
   font-size: 17px;
@@ -121,6 +123,62 @@ header.scrolled {
   letter-spacing: 0.08em;
   color: var(--text-3);
   line-height: 1;
+}
+
+/* Sticky due amount following screen on scroll */
+.header-due-pill {
+  position: absolute;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  opacity: 0;
+  pointer-events: none;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+  transform: translate3d(0, 8px, 0);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.header-due-amt {
+  font-size: 17.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+  -webkit-font-smoothing: antialiased;
+}
+.header-due-amt.settled {
+  color: var(--emerald);
+}
+.header-due-sub {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-2);
+  line-height: 1;
+  white-space: nowrap;
+  -webkit-font-smoothing: antialiased;
+}
+.header-due-sub strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* Cross-glide animation on scroll */
+header.scrolled .brand {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(0, -8px, 0);
+}
+header.scrolled .header-due-pill {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate3d(0, 0, 0);
 }
 
 .header-right {
@@ -162,75 +220,6 @@ header.scrolled {
   justify-content: center;
   font-size: 14.5px;
   line-height: 1;
-}
-
-/* Sticky due amount bar (appears ONLY when big tile amount is completely obstructed) */
-.header-due-bar {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: max(0.85rem, env(safe-area-inset-top)) 1.25rem 0.85rem;
-  opacity: 0;
-  pointer-events: none;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  will-change: transform, opacity;
-  transform: translate3d(0, 10px, 0);
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-.header-due-content {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  max-width: 100%;
-}
-.header-due-amt {
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: -0.025em;
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-  -webkit-font-smoothing: antialiased;
-}
-.header-due-amt.settled {
-  color: var(--emerald);
-}
-.header-due-divider {
-  color: var(--text-3);
-  font-size: 14px;
-  font-weight: 700;
-  opacity: 0.6;
-}
-.header-due-sub {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--text-2);
-  line-height: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  -webkit-font-smoothing: antialiased;
-}
-.header-due-sub strong {
-  color: var(--text);
-  font-weight: 700;
-}
-
-/* On scroll: top row glides slightly up and fades out, due bar glides in simultaneously */
-header.scrolled .header-top-row {
-  transform: translate3d(0, -10px, 0);
-  opacity: 0;
-  pointer-events: none;
-}
-header.scrolled .header-due-bar {
-  transform: translate3d(0, 0, 0);
-  opacity: 1;
-  pointer-events: auto;
 }
 
 main {
@@ -923,22 +912,19 @@ main {
 </div>
 
 <header id="main-header">
-  <div class="header-top-row" id="header-top-row">
-    <div class="brand">
+  <div class="header-left">
+    <div class="brand" id="header-brand">
       <div class="brand-title">Jombs &amp; Krombs</div>
       <div class="brand-badge">Expenses</div>
     </div>
-    <div class="header-right">
-      <button class="header-circle-btn" id="ntfy-btn" onclick="openNtfyModal()" title="ntfy push alerts" aria-label="ntfy push alerts">🔔</button>
-      <button class="header-circle-btn" onclick="cycleTheme()" id="theme-btn" title="Toggle theme" aria-label="Toggle theme"><span class="theme-icon">◐</span></button>
-    </div>
-  </div>
-  <div class="header-due-bar" id="header-due-bar" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Tap to scroll to top">
-    <div class="header-due-content">
+    <div class="header-due-pill" id="header-due" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Tap to scroll to top">
       <span class="header-due-amt" id="hdr-amt">£0.00</span>
-      <span class="header-due-divider">·</span>
       <span class="header-due-sub" id="hdr-sub">All square</span>
     </div>
+  </div>
+  <div class="header-right">
+    <button class="header-circle-btn" id="ntfy-btn" onclick="openNtfyModal()" title="ntfy push alerts" aria-label="ntfy push alerts">🔔</button>
+    <button class="header-circle-btn" onclick="cycleTheme()" id="theme-btn" title="Toggle theme" aria-label="Toggle theme"><span class="theme-icon">◐</span></button>
   </div>
 </header>
 
@@ -1231,31 +1217,10 @@ function render() {
   handleScroll();
 }
 
-let isHeaderScrolled = false;
-
 function handleScroll() {
   const header = document.getElementById('main-header');
   if (!header) return;
-  const heroAmt = document.querySelector('.hero-amount');
-  if (heroAmt) {
-    const heroRect = heroAmt.getBoundingClientRect();
-    const headerRect = header.getBoundingClientRect();
-    // Appears ONLY when the big amount in the main tile is completely obstructed by the top header area
-    // Hysteresis deadband: avoids threshold flutter during slow/momentum scrolling
-    if (!isHeaderScrolled && heroRect.bottom <= (headerRect.bottom + 1)) {
-      isHeaderScrolled = true;
-      header.classList.add('scrolled');
-    } else if (isHeaderScrolled && heroRect.bottom > (headerRect.bottom + 16)) {
-      isHeaderScrolled = false;
-      header.classList.remove('scrolled');
-    }
-  } else {
-    const scrolled = window.scrollY > 150;
-    if (scrolled !== isHeaderScrolled) {
-      isHeaderScrolled = scrolled;
-      header.classList.toggle('scrolled', isHeaderScrolled);
-    }
-  }
+  header.classList.toggle('scrolled', window.scrollY > 40);
 }
 
 let scrollTicking = false;
