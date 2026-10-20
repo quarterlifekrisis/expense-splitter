@@ -66,33 +66,35 @@ body {
 }
 
 header {
-  background: rgba(248, 249, 250, 0.85);
-  border-bottom: 1px solid var(--border);
-  padding: max(0.85rem, env(safe-area-inset-top)) 1.25rem 0.85rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   position: sticky;
   top: 0;
   z-index: 20;
+  background: rgba(248, 249, 250, 0.85);
+  border-bottom: 1px solid var(--border);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  transition: background 0.25s ease, border-color 0.25s ease;
+  transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  overflow: hidden;
 }
 [data-theme="dark"] header {
   background: rgba(11, 12, 14, 0.85);
 }
-.header-left {
+header.scrolled {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+.header-top-row {
   display: flex;
   align-items: center;
-  position: relative;
-  min-height: 38px;
+  justify-content: space-between;
+  padding: max(0.85rem, env(safe-area-inset-top)) 1.25rem 0.85rem;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
 }
+
 .brand {
   display: flex;
   flex-direction: column;
   gap: 1px;
-  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .brand-title {
   font-size: 17px;
@@ -108,56 +110,6 @@ header {
   letter-spacing: 0.08em;
   color: var(--text-3);
   line-height: 1;
-}
-
-/* Sticky due amount following screen on scroll */
-.header-due-pill {
-  position: absolute;
-  left: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(6px);
-  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-.header-due-amt {
-  font-size: 17.5px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
-  line-height: 1.15;
-}
-.header-due-amt.settled {
-  color: var(--emerald);
-}
-.header-due-sub {
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-2);
-  line-height: 1;
-  white-space: nowrap;
-}
-.header-due-sub strong {
-  color: var(--text);
-  font-weight: 700;
-}
-
-header.scrolled .brand {
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-6px);
-}
-header.scrolled .header-due-pill {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(0);
 }
 
 .header-right {
@@ -201,9 +153,69 @@ header.scrolled .header-due-pill {
   line-height: 1;
 }
 
-.sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; transition: background 0.3s; flex-shrink: 0; }
-.sync-dot.connected { background: var(--emerald); box-shadow: 0 0 6px rgba(16, 185, 129, 0.4); }
-.sync-dot.error { background: var(--coral); }
+/* Sticky due amount bar (appears ONLY when big tile amount is completely obstructed) */
+.header-due-bar {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(0.85rem, env(safe-area-inset-top)) 1.25rem 0.85rem;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(12px);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.header-due-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+}
+.header-due-amt {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.header-due-amt.settled {
+  color: var(--emerald);
+}
+.header-due-divider {
+  color: var(--text-3);
+  font-size: 14px;
+  font-weight: 700;
+  opacity: 0.6;
+}
+.header-due-sub {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-2);
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.header-due-sub strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* On scroll: top row glides up and disappears, due bar glides in */
+header.scrolled .header-top-row {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+header.scrolled .header-due-bar {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
 
 main {
   max-width: 520px;
@@ -893,20 +905,22 @@ main {
 </div>
 
 <header id="main-header">
-  <div class="header-left">
+  <div class="header-top-row" id="header-top-row">
     <div class="brand">
       <div class="brand-title">Jombs &amp; Krombs</div>
       <div class="brand-badge">Expenses</div>
     </div>
-    <div class="header-due-pill" id="header-due" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Tap to scroll to top">
-      <span class="header-due-amt" id="hdr-amt">£0.00</span>
-      <span class="header-due-sub" id="hdr-sub">All square</span>
+    <div class="header-right">
+      <button class="header-circle-btn" id="ntfy-btn" onclick="openNtfyModal()" title="ntfy push alerts" aria-label="ntfy push alerts">🔔</button>
+      <button class="header-circle-btn" onclick="cycleTheme()" id="theme-btn" title="Toggle theme" aria-label="Toggle theme"><span class="theme-icon">◐</span></button>
     </div>
   </div>
-  <div class="header-right">
-    <button class="header-circle-btn" id="ntfy-btn" onclick="openNtfyModal()" title="ntfy push alerts" aria-label="ntfy push alerts">🔔</button>
-    <button class="header-circle-btn" onclick="cycleTheme()" id="theme-btn" title="Toggle theme" aria-label="Toggle theme"><span class="theme-icon">◐</span></button>
-    <div class="sync-dot" id="sync-dot" title="Connecting..."></div>
+  <div class="header-due-bar" id="header-due-bar" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Tap to scroll to top">
+    <div class="header-due-content">
+      <span class="header-due-amt" id="hdr-amt">£0.00</span>
+      <span class="header-due-divider">·</span>
+      <span class="header-due-sub" id="hdr-sub">All square</span>
+    </div>
   </div>
 </header>
 
@@ -1044,6 +1058,7 @@ function initFirebase(cfg) {
 }
 function setSyncDot(s) {
   const d = document.getElementById('sync-dot');
+  if (!d) return;
   d.className = 'sync-dot'+(s==='connected'?' connected':s==='error'?' error':'');
   d.title = s==='connected'?'Connected':s==='error'?'Connection error':'Connecting...';
 }
@@ -1201,9 +1216,30 @@ function render() {
 function handleScroll() {
   const header = document.getElementById('main-header');
   if (!header) return;
-  header.classList.toggle('scrolled', window.scrollY > 45);
+  const heroAmt = document.querySelector('.hero-amount');
+  let isScrolled = false;
+  if (heroAmt) {
+    const heroRect = heroAmt.getBoundingClientRect();
+    const headerRect = header.getBoundingClientRect();
+    // Appears ONLY when the big amount in the main tile is completely obstructed by the top header area
+    isScrolled = heroRect.bottom <= (headerRect.bottom + 2);
+  } else {
+    isScrolled = window.scrollY > 150;
+  }
+  header.classList.toggle('scrolled', isScrolled);
 }
-window.addEventListener('scroll', handleScroll, { passive: true });
+
+let scrollTicking = false;
+function onScroll() {
+  if (!scrollTicking) {
+    requestAnimationFrame(() => {
+      handleScroll();
+      scrollTicking = false;
+    });
+    scrollTicking = true;
+  }
+}
+window.addEventListener('scroll', onScroll, { passive: true });
 
 function getImpactHtml(payer, partner, amount, partnerPct) {
   const partnerAmt = +(amount * partnerPct / 100).toFixed(2);
