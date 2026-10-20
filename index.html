@@ -88,7 +88,11 @@ header.scrolled {
   align-items: center;
   justify-content: space-between;
   padding: max(0.85rem, env(safe-area-inset-top)) 1.25rem 0.85rem;
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
 }
 
 .brand {
@@ -163,8 +167,11 @@ header.scrolled {
   padding: max(0.85rem, env(safe-area-inset-top)) 1.25rem 0.85rem;
   opacity: 0;
   pointer-events: none;
-  transform: translateY(12px);
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+  transform: translate3d(0, 10px, 0);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
@@ -181,6 +188,7 @@ header.scrolled {
   color: var(--text);
   font-variant-numeric: tabular-nums;
   line-height: 1;
+  -webkit-font-smoothing: antialiased;
 }
 .header-due-amt.settled {
   color: var(--emerald);
@@ -199,20 +207,21 @@ header.scrolled {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  -webkit-font-smoothing: antialiased;
 }
 .header-due-sub strong {
   color: var(--text);
   font-weight: 700;
 }
 
-/* On scroll: top row glides up and disappears, due bar glides in */
+/* On scroll: top row glides slightly up and fades out, due bar glides in simultaneously */
 header.scrolled .header-top-row {
-  transform: translateY(-100%);
+  transform: translate3d(0, -10px, 0);
   opacity: 0;
   pointer-events: none;
 }
 header.scrolled .header-due-bar {
-  transform: translateY(0);
+  transform: translate3d(0, 0, 0);
   opacity: 1;
   pointer-events: auto;
 }
@@ -1213,20 +1222,31 @@ function render() {
   handleScroll();
 }
 
+let isHeaderScrolled = false;
+
 function handleScroll() {
   const header = document.getElementById('main-header');
   if (!header) return;
   const heroAmt = document.querySelector('.hero-amount');
-  let isScrolled = false;
   if (heroAmt) {
     const heroRect = heroAmt.getBoundingClientRect();
     const headerRect = header.getBoundingClientRect();
     // Appears ONLY when the big amount in the main tile is completely obstructed by the top header area
-    isScrolled = heroRect.bottom <= (headerRect.bottom + 2);
+    // Hysteresis deadband: avoids threshold flutter during slow/momentum scrolling
+    if (!isHeaderScrolled && heroRect.bottom <= (headerRect.bottom + 1)) {
+      isHeaderScrolled = true;
+      header.classList.add('scrolled');
+    } else if (isHeaderScrolled && heroRect.bottom > (headerRect.bottom + 16)) {
+      isHeaderScrolled = false;
+      header.classList.remove('scrolled');
+    }
   } else {
-    isScrolled = window.scrollY > 150;
+    const scrolled = window.scrollY > 150;
+    if (scrolled !== isHeaderScrolled) {
+      isHeaderScrolled = scrolled;
+      header.classList.toggle('scrolled', isHeaderScrolled);
+    }
   }
-  header.classList.toggle('scrolled', isScrolled);
 }
 
 let scrollTicking = false;
