@@ -2,93 +2,281 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#f8f6f2" id="meta-theme-color" />
 <title>Jombs & Krombs · Expenses</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
 <style>
 :root {
-  --bg: #f7f5f0; --surface: #ffffff; --border: #e8e4dc; --border-med: #d0ccc2;
-  --text: #1a1916; --text-2: #6b6760; --text-3: #a09d98;
-  --green: #1D9E75; --green-bg: #e8f7f2; --coral: #D85A30; --coral-bg: #faece7;
-  --amber: #BA7517; --amber-bg: #faeeda; --blue: #185FA5; --blue-bg: #e6f1fb;
-  --radius: 12px; --radius-sm: 8px;
+  --bg: #f8f6f2;
+  --surface: #ffffff;
+  --surface-subtle: #f3f0e8;
+  --border: rgba(0, 0, 0, 0.07);
+  --border-med: rgba(0, 0, 0, 0.13);
+  --text: #1a1916;
+  --text-2: #635f58;
+  --text-3: #99948c;
+  --green: #10b981;
+  --green-bg: #ecfdf5;
+  --coral: #ef4444;
+  --coral-bg: #fef2f2;
+  --amber: #f59e0b;
+  --amber-bg: #fffbeb;
+  --blue: #3b82f6;
+  --blue-bg: #eff6ff;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 6px 18px rgba(0, 0, 0, 0.02);
+  --radius: 14px;
+  --radius-sm: 9px;
 }
 [data-theme="dark"] {
-  --bg: #111110; --surface: #1c1c1a; --border: #2a2a27; --border-med: #3a3a36;
-  --text: #f0ede8; --text-2: #9a9790; --text-3: #5a5854;
-  --green: #2bbf8e; --green-bg: #0d2b20; --coral: #e8704a; --coral-bg: #2b1a12;
-  --amber: #d4922a; --amber-bg: #2a1e0a; --blue: #4d8fd4; --blue-bg: #0d1e30;
+  --bg: #0d0d0c;
+  --surface: #181816;
+  --surface-subtle: #22221f;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-med: rgba(255, 255, 255, 0.15);
+  --text: #f4f2ee;
+  --text-2: #9e9a93;
+  --text-3: #635f58;
+  --green: #34d399;
+  --green-bg: #064e3b;
+  --coral: #f87171;
+  --coral-bg: #450a0a;
+  --amber: #fbbf24;
+  --amber-bg: #451a03;
+  --blue: #60a5fa;
+  --blue-bg: #1e3a8a;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.4);
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 15px;
+  transition: background 0.25s ease, color 0.25s ease;
+  -webkit-font-smoothing: antialiased;
+}
 
-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 1.25rem; display: flex; align-items: center; gap: 8px; position: sticky; top: 0; z-index: 10; }
-header h1 { font-family: 'DM Serif Display', serif; font-size: 20px; font-weight: 400; letter-spacing: -0.01em; }
-header .sub { font-size: 12px; color: var(--text-3); }
+header {
+  background: rgba(248, 246, 242, 0.88);
+  border-bottom: 1px solid var(--border);
+  padding: max(0.9rem, env(safe-area-inset-top)) 1.25rem 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
+[data-theme="dark"] header {
+  background: rgba(24, 24, 22, 0.88);
+}
+header h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 21px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+header .sub {
+  font-size: 11px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+}
 .header-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
 
-.theme-btn:hover { background: var(--border); }
-.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #ccc; transition: background 0.3s; flex-shrink: 0; }
-.sync-dot.connected { background: var(--green); }
+.theme-btn {
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 11px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+}
+.theme-btn:hover { background: var(--border-med); color: var(--text); }
+.theme-icon { font-size: 13px; line-height: 1; }
+.sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; transition: background 0.3s; flex-shrink: 0; }
+.sync-dot.connected { background: var(--green); box-shadow: 0 0 6px rgba(16, 185, 129, 0.4); }
 .sync-dot.error { background: var(--coral); }
 
-main { max-width: 540px; margin: 0 auto; padding: 1.25rem 1rem 4rem; }
+main {
+  max-width: 540px;
+  margin: 0 auto;
+  padding: 1.25rem 1rem max(5rem, env(safe-area-inset-bottom) + 3rem);
+}
 
-.balance-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1.25rem; }
-.balance-totals { display: flex; margin-bottom: 1rem; }
-.bal-col { flex: 1; text-align: center; padding: 0 0.5rem; }
-.bal-col + .bal-col { border-left: 1px solid var(--border); }
-.bal-label { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px; }
-.bal-name { font-size: 12px; color: var(--text-3); margin-bottom: 1px; }
-.bal-amount { font-size: 15px; font-weight: 500; color: var(--text-2); font-variant-numeric: tabular-nums; }
-.balance-footer { border-top: 1px solid var(--border); padding-top: 1rem; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-.balance-msg { font-size: 18px; font-weight: 500; color: var(--text); line-height: 1.4; }
-.balance-msg .amount { color: var(--green); }
-.balance-msg.settled { color: var(--green); }
-.last-paid { font-size: 12px; color: var(--text-3); margin-top: 5px; }
+.balance-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  box-shadow: var(--card-shadow);
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
+.balance-totals {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 1.25rem;
+}
+.bal-col {
+  background: var(--surface-subtle);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid var(--border);
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
+.bal-col.jombs { border-top: 3px solid var(--blue); }
+.bal-col.krombs { border-top: 3px solid var(--green); }
+.bal-label { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
+.bal-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.bal-amount { font-size: 17px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.balance-footer {
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.balance-msg { font-size: 16px; font-weight: 500; color: var(--text); line-height: 1.4; }
+.balance-msg strong { font-weight: 600; }
+.balance-msg .amount { color: var(--green); font-weight: 600; }
+.balance-msg.settled { color: var(--green); display: flex; align-items: center; gap: 5px; }
+.last-paid { font-size: 12px; color: var(--text-3); margin-top: 4px; }
 .last-paid strong { color: var(--text-2); font-weight: 500; }
 
-.btn { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; padding: 7px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-med); background: transparent; color: var(--text); cursor: pointer; transition: background 0.15s, opacity 0.15s; white-space: nowrap; }
-.btn:hover { background: var(--bg); }
-.btn:active { transform: scale(0.98); }
+.btn {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-med);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+.btn:hover { background: var(--surface-subtle); }
+.btn:active { transform: scale(0.97); }
 .btn-primary { background: #2e2d2a; color: #f0ede8; border-color: transparent; }
-[data-theme="dark"] .btn-primary { background: #3a3a36; color: #e8e4dc; }
-.btn-primary:hover { opacity: 0.85; }
-.btn-full { width: 100%; padding: 11px; font-size: 14px; }
-.btn-settle { background: var(--green-bg); color: var(--green); border-color: transparent; }
-.btn-settle:hover { opacity: 0.85; background: var(--green-bg); }
+[data-theme="dark"] .btn-primary { background: #f0ede8; color: #1a1916; }
+.btn-primary:hover { opacity: 0.9; }
+.btn-full { width: 100%; padding: 12px; font-size: 14px; border-radius: var(--radius-sm); font-weight: 600; }
+.btn-settle {
+  background: var(--green);
+  color: #ffffff;
+  border: none;
+  font-weight: 600;
+  border-radius: 20px;
+  padding: 7px 18px;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+}
+.btn-settle:hover { opacity: 0.9; }
 .btn-danger { color: var(--coral); border-color: var(--coral); background: transparent; }
 .btn-danger:hover { background: var(--coral-bg); }
 
 .add-btn-wrap { margin-bottom: 1.25rem; }
-.form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1.25rem; animation: slideDown 0.18s ease; }
+.form-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  box-shadow: var(--card-shadow);
+  animation: slideDown 0.18s ease;
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
 @keyframes slideDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
-.form-heading { font-family: 'DM Serif Display', serif; font-size: 16px; font-weight: 400; margin-bottom: 1rem; }
-.field { margin-bottom: 12px; }
-.field label { display: block; font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
-.field input, .field select, .field textarea { width: 100%; padding: 9px 12px; font-size: 14px; font-family: 'DM Sans', sans-serif; border: 1px solid var(--border-med); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); outline: none; transition: border-color 0.15s; }
+.form-heading { font-family: 'DM Serif Display', serif; font-size: 18px; font-weight: 400; margin-bottom: 1rem; }
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; font-weight: 500; }
+.field input, .field select, .field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  border: 1px solid var(--border-med);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
 .field textarea { resize: vertical; min-height: 58px; }
-.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--text); }
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: var(--text);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.05);
+}
+[data-theme="dark"] .field input:focus, [data-theme="dark"] .field select:focus, [data-theme="dark"] .field textarea:focus {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
 
-.split-slider-wrap { display: flex; flex-direction: column; gap: 8px; }
-.split-labels { display: flex; justify-content: space-between; align-items: center; }
-.split-name { font-size: 13px; font-weight: 500; color: var(--text); min-width: 80px; }
-.split-name.right { text-align: right; }
-.split-center { font-size: 11px; color: var(--text-3); text-align: center; flex: 1; }
-.split-track { position: relative; height: 6px; border-radius: 3px; overflow: hidden; background: var(--border-med); }
-.split-fill { position: absolute; left: 0; top: 0; bottom: 0; background: #2e2d2a; border-radius: 3px; transition: width 0.1s; }
-[data-theme="dark"] .split-fill { background: #9a9790; }
-.split-slider-wrap input[type=range] { width: 100%; margin: 0; height: 6px; -webkit-appearance: none; appearance: none; background: transparent; cursor: pointer; }
-.split-slider-wrap input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #2e2d2a; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--border-med); cursor: pointer; margin-top: -6px; }
-[data-theme="dark"] .split-slider-wrap input[type=range]::-webkit-slider-thumb { background: #9a9790; }
+.split-wrap { display: flex; flex-direction: column; gap: 8px; }
+
+/* Segmented Pill Switcher */
+.split-pills { display: flex; background: var(--bg); border: 1px solid var(--border-med); border-radius: 20px; padding: 3px; gap: 3px; }
+.split-pill { flex: 1; border: none; background: transparent; color: var(--text-2); font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 500; padding: 6px 4px; border-radius: 16px; cursor: pointer; transition: all 0.15s ease; text-align: center; white-space: nowrap; }
+.split-pill:hover { color: var(--text); }
+.split-pill.active { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+[data-theme="dark"] .split-pill.active { box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+
+/* Person Row & Integrated Slider */
+.split-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px 10px; display: flex; flex-direction: column; gap: 8px; }
+.split-parties { display: flex; align-items: center; justify-content: space-between; }
+.split-party { flex: 1; display: flex; flex-direction: column; }
+.split-party.left { align-items: flex-start; text-align: left; }
+.split-party.right { align-items: flex-end; text-align: right; }
+.split-party-header { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
+.split-party.right .split-party-header { flex-direction: row-reverse; }
+.split-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.split-badge { font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; padding: 1px 5px; border-radius: 4px; background: var(--surface); border: 1px solid var(--border-med); color: var(--text-2); font-weight: 500; }
+.split-badge.muted { color: var(--text-3); }
+.split-amount { font-size: 18px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1.2; }
+.split-pct-label { display: flex; align-items: center; font-size: 11px; color: var(--text-3); margin-top: 1px; font-variant-numeric: tabular-nums; }
+.split-pct-input { width: 34px; padding: 1px 2px; font-size: 11px; font-family: inherit; font-weight: 500; text-align: right; border: 1px solid transparent; border-radius: 4px; background: transparent; color: var(--text-2); -moz-appearance: textfield; }
+.split-pct-input:hover, .split-pct-input:focus { border-color: var(--border-med); background: var(--surface); color: var(--text); outline: none; }
+.split-pct-input::-webkit-outer-spin-button, .split-pct-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.split-divider-line { width: 1px; height: 36px; background: var(--border-med); margin: 0 16px; flex-shrink: 0; }
+
+/* Clean Minimal Slider */
+.split-slider-wrap { position: relative; width: 100%; padding: 4px 0; }
+.split-slider-wrap input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 3px; background: var(--border-med); outline: none; margin: 0; cursor: pointer; display: block; }
+.split-slider-wrap input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #2e2d2a; border: 2px solid var(--surface); box-shadow: 0 1px 3px rgba(0,0,0,0.2); cursor: grab; transition: transform 0.1s ease; }
+[data-theme="dark"] .split-slider-wrap input[type=range]::-webkit-slider-thumb { background: #e8e4dc; border-color: #1c1c1a; }
+.split-slider-wrap input[type=range]:active::-webkit-slider-thumb { transform: scale(1.15); cursor: grabbing; }
 .split-slider-wrap input[type=range]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; }
-.split-inputs { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
-.split-input-wrap { flex: 1; display: flex; flex-direction: column; gap: 3px; }
-.split-input-wrap input { width: 100%; padding: 7px 10px; font-size: 15px; font-weight: 500; text-align: center; }
-.split-input-label { font-size: 11px; color: var(--text-3); text-align: center; text-transform: uppercase; letter-spacing: 0.05em; }
-.split-divider { font-size: 18px; color: var(--text-3); padding-bottom: 18px; }
+
+/* Subtle Impact Note */
+.split-impact-note { font-size: 12px; color: var(--text-2); text-align: center; line-height: 1.4; padding-top: 2px; }
+.split-impact-note strong { color: var(--text); font-weight: 600; }
+.split-impact-note .amt { color: var(--green); font-weight: 600; }
+.split-impact-note.settled { color: var(--text-3); }
 
 .history-readonly { display: flex; flex-direction: column; gap: 5px; }
 .log-page { position: fixed; inset: 0; background: var(--bg); z-index: 40; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.32,0.72,0,1); }
@@ -218,8 +406,8 @@ main { max-width: 540px; margin: 0 auto; padding: 1.25rem 1rem 4rem; }
   <h1>Jombs & Krombs</h1>
   <span class="sub">expenses</span>
   <div class="header-right">
-    <button class="theme-btn" id="notif-btn" title="Notifications">🔕</button>
-    <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">☾ Dark</button>
+    <button class="theme-btn" id="ntfy-btn" onclick="openNtfyModal()" title="ntfy push alerts">🔔 ntfy</button>
+    <button class="theme-btn" onclick="cycleTheme()" id="theme-btn" title="Toggle theme"><span class="theme-icon">◐</span> Auto</button>
     <div class="sync-dot" id="sync-dot" title="Connecting..."></div>
   </div>
 </header>
@@ -273,20 +461,34 @@ function closeModal() { document.getElementById('modal-root').innerHTML = ''; }
 
 // ── Config ──────────────────────────────────────────────────
 const CFG_KEY = 'jk_firebase_cfg';
-function loadConfig() { try { return JSON.parse(localStorage.getItem(CFG_KEY)); } catch { return null; } }
+const DEFAULT_CFG = {
+  apiKey: "AIzaSyDqkU10nIxQrXslECfGsTE2V6flSOQpGuw",
+  projectId: "jombs-krombs-et",
+  appId: "1:451395058527:web:2e07f421a76915364bd4ea",
+  authDomain: "jombs-krombs-et.firebaseapp.com",
+  storageBucket: "jombs-krombs-et.firebasestorage.app",
+  messagingSenderId: "451395058527"
+};
+function loadConfig() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CFG_KEY));
+    if (saved && saved.apiKey) return saved;
+  } catch(e) {}
+  return DEFAULT_CFG;
+}
 function saveConfig() {
   const apiKey = document.getElementById('cfg-apiKey').value.trim();
   const projectId = document.getElementById('cfg-projectId').value.trim();
   const appId = document.getElementById('cfg-appId').value.trim();
   if (!apiKey||!projectId||!appId) { toast('Please fill in all three fields'); return; }
-  const cfg = {apiKey,projectId,appId,authDomain:projectId+'.firebaseapp.com',storageBucket:projectId+'.appspot.com',messagingSenderId:'000000000000'};
+  const cfg = {apiKey,projectId,appId,authDomain:projectId+'.firebaseapp.com',storageBucket:projectId+'.appspot.com',messagingSenderId:'451395058527'};
   localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
   document.getElementById('config-overlay').style.display = 'none';
   initFirebase(cfg);
 }
 
 // ── State ───────────────────────────────────────────────────
-let db, expenses = [], historyEntries = [], formOpen = false, editingId = null, splitPct = 50, collapsedMonths = {};
+let db, expenses = [], historyEntries = [], formOpen = false, editingId = null, splitPct = 50, curPartnerPct = 50, collapsedMonths = {};
 
 // ── Firebase ────────────────────────────────────────────────
 function initFirebase(cfg) {
@@ -296,7 +498,6 @@ function initFirebase(cfg) {
     setSyncDot('connecting');
     db.collection('expenses').orderBy('createdAt','desc').onSnapshot(snap => {
       expenses = snap.docs.map(d => ({id:d.id,...d.data()}));
-      checkNewEntries(expenses);
       setSyncDot('connected'); render();
     }, err => { setSyncDot('error'); document.getElementById('app').innerHTML=`<div class="empty"><strong>Connection error</strong>${err.message}</div>`; });
     db.collection('history').orderBy('createdAt','desc').onSnapshot(snap => {
@@ -333,11 +534,17 @@ function writeHistory(data) {
     .catch(e => console.warn('History write failed:', e.message));
 }
 function mkSplitLabel(e) {
-  const j=getJPct(e),k=100-j;
-  if(j===0) return e.payer==='Jombs'?'Gift (J covered all)':'Gift (K covered all)';
-  if(j===100) return 'Jombs 100%';
-  if(j===50) return '50/50';
-  return `J ${j}% · K ${k}%`;
+  const j = getJPct(e), k = 100 - j;
+  if (j === 50) return '50/50';
+  if (e.payer === 'Jombs') {
+    if (k === 100) return 'Krombs owes all';
+    if (j === 100) return 'Jombs covered all';
+    return `J ${j}% · K ${k}%`;
+  } else {
+    if (j === 100) return 'Jombs owes all';
+    if (k === 100) return 'Krombs covered all';
+    return `K ${k}% · J ${j}%`;
+  }
 }
 function curMonthKey() { return new Date().toLocaleDateString('en-GB',{month:'long',year:'numeric'}); }
 
@@ -423,8 +630,8 @@ function render() {
   document.getElementById('app').innerHTML=`
     <div class="balance-card">
       <div class="balance-totals">
-        <div class="bal-col"><div class="bal-label">Total paid</div><div class="bal-name">Jombs</div><div class="bal-amount">${fmt(totalPaid('Jombs'))}</div></div>
-        <div class="bal-col"><div class="bal-label">Total paid</div><div class="bal-name">Krombs</div><div class="bal-amount">${fmt(totalPaid('Krombs'))}</div></div>
+        <div class="bal-col jombs"><div class="bal-label">Total paid</div><div class="bal-name">Jombs</div><div class="bal-amount">${fmt(totalPaid('Jombs'))}</div></div>
+        <div class="bal-col krombs"><div class="bal-label">Total paid</div><div class="bal-name">Krombs</div><div class="bal-amount">${fmt(totalPaid('Krombs'))}</div></div>
       </div>
       <div class="balance-footer">
         <div>${msg}${lastHtml}</div>
@@ -439,48 +646,78 @@ function render() {
 
   if(formOpen)setTimeout(()=>{const el=document.getElementById('f-desc');if(el)el.focus();},50);
   setTimeout(attachSwipeHandlers,0);
-  const t=document.documentElement.getAttribute('data-theme')||'light';
-  const btn=document.getElementById('theme-btn');
-  if(btn)btn.textContent=t==='dark'?'☀ Light':'☾ Dark';
-  renderNotifBtn();
+  applyTheme();
 }
 
 
+
+function getImpactHtml(payer, partner, amount, partnerPct) {
+  const partnerAmt = +(amount * partnerPct / 100).toFixed(2);
+  if (partnerPct === 0) {
+    return `<span class="split-impact-note settled">✓ <strong>${payer}</strong> covers 100% · no debt created</span>`;
+  }
+  const amtStr = amount > 0 ? fmt(partnerAmt) : `${partnerPct}%`;
+  return `👉 <strong>${partner}</strong> will owe <strong>${payer}</strong> <span class="amt">${amtStr}</span>`;
+}
 
 function renderForm() {
   const isEdit=editingId!==null;
   const ex=isEdit?expenses.find(e=>e.id===editingId):null;
   const d=ex?ex.desc:'',a=ex?ex.amount:'',p=ex?ex.payer:'Jombs',n=ex?(ex.note||''):'';
+  const partner=(p==='Jombs')?'Krombs':'Jombs';
+  const partnerPct=curPartnerPct;
+  const payerPct=100-partnerPct;
+  const amountVal=parseFloat(a)||0;
+  const partnerAmt=+(amountVal*partnerPct/100).toFixed(2);
+  const payerAmt=+(amountVal-partnerAmt).toFixed(2);
+
   return `<div class="form-card">
     <div class="form-heading">${isEdit?'Edit expense':'Add expense'}</div>
     <div class="field"><label>Description</label><input id="f-desc" type="text" placeholder="e.g. Groceries" value="${d}" /></div>
     <div class="form-row">
-      <div class="field"><label>Amount (£)</label><input id="f-amount" type="number" min="0.01" step="0.01" placeholder="0.00" value="${a}" /></div>
-      <div class="field"><label>Paid by</label><select id="f-payer">
+      <div class="field"><label>Amount (£)</label><input id="f-amount" type="number" min="0.01" step="0.01" placeholder="0.00" value="${a}" oninput="onAmountInput()" /></div>
+      <div class="field"><label>Paid by</label><select id="f-payer" onchange="onPayerChange(this.value)">
         <option value="Jombs"${p==='Jombs'?' selected':''}>Jombs</option>
         <option value="Krombs"${p==='Krombs'?' selected':''}>Krombs</option>
       </select></div>
     </div>
     <div class="field"><label>Note (optional)</label><textarea id="f-note" placeholder="e.g. Waitrose, big shop">${n}</textarea></div>
     <div class="field"><label>Split</label>
-      <div class="split-slider-wrap">
-        <div class="split-labels">
-          <span class="split-name">Jombs</span>
-          <span class="split-center" id="split-center-label">${splitPct===50?'50 / 50':splitPct+' / '+(100-splitPct)}</span>
-          <span class="split-name right">Krombs</span>
+      <div class="split-wrap">
+        <div class="split-pills">
+          <button type="button" class="split-pill${partnerPct===50?' active':''}" id="preset-50" onclick="setSplitPreset('equal')">50 / 50</button>
+          <button type="button" class="split-pill${partnerPct===100?' active':''}" id="preset-partner-all" onclick="setSplitPreset('partner-all')">${partner} owes all</button>
+          <button type="button" class="split-pill${partnerPct===0?' active':''}" id="preset-payer-all" onclick="setSplitPreset('payer-all')">I cover all</button>
         </div>
-        <div class="split-track"><div class="split-fill" id="split-fill" style="width:${splitPct}%"></div></div>
-        <input type="range" min="0" max="100" step="1" value="${splitPct}" oninput="updateSplit(this.value)" />
-        <div class="split-inputs">
-          <div class="split-input-wrap">
-            <input type="number" id="split-j" min="0" max="100" value="${splitPct}" oninput="updateSplitFromJ(this.value)" />
-            <span class="split-input-label">Jombs %</span>
+
+        <div class="split-card">
+          <div class="split-parties">
+            <div class="split-party left">
+              <div class="split-party-header">
+                <span class="split-name" id="card-payer-name">${p}</span>
+                <span class="split-badge">paid</span>
+              </div>
+              <div class="split-amount" id="card-payer-amount">${fmt(payerAmt)}</div>
+              <div class="split-pct-label"><input type="number" id="split-payer-pct" class="split-pct-input" min="0" max="100" value="${payerPct}" oninput="onPayerPctInput(this.value)" />%</div>
+            </div>
+
+            <div class="split-divider-line"></div>
+
+            <div class="split-party right">
+              <div class="split-party-header">
+                <span class="split-name" id="card-partner-name">${partner}</span>
+                <span class="split-badge muted">owes</span>
+              </div>
+              <div class="split-amount" id="card-partner-amount">${fmt(partnerAmt)}</div>
+              <div class="split-pct-label"><input type="number" id="split-partner-pct" class="split-pct-input" min="0" max="100" value="${partnerPct}" oninput="onPartnerPctInput(this.value)" />%</div>
+            </div>
           </div>
-          <div class="split-divider">/</div>
-          <div class="split-input-wrap">
-            <input type="number" id="split-k" min="0" max="100" value="${100-splitPct}" oninput="updateSplitFromK(this.value)" />
-            <span class="split-input-label">Krombs %</span>
+
+          <div class="split-slider-wrap">
+            <input type="range" min="0" max="100" step="1" id="split-range" value="${partnerPct}" oninput="onSliderInput(this.value)" />
           </div>
+
+          <div class="split-impact-note" id="split-impact-wrap">${getImpactHtml(p, partner, amountVal, partnerPct)}</div>
         </div>
       </div>
     </div>
@@ -523,29 +760,100 @@ function renderItem(e) {
 }
 
 // ── Form actions ────────────────────────────────────────────
-function openForm() { haptic('light'); formOpen=true; editingId=null; splitPct=50; render(); }
+function openForm() { haptic('light'); formOpen=true; editingId=null; curPartnerPct=50; render(); }
 function closeForm() { formOpen=false; editingId=null; render(); }
 function openEdit(id) {
   const e=expenses.find(x=>x.id===id); if(!e)return;
-  haptic('light'); editingId=id; formOpen=true; splitPct=getJPct(e); render();
+  haptic('light'); editingId=id; formOpen=true;
+  const jPct=getJPct(e);
+  curPartnerPct=(e.payer==='Jombs')?(100-jPct):jPct;
+  render();
 }
 function toggleMonth(key) { collapsedMonths[key]=!collapsedMonths[key]; render(); }
 
-function updateSplit(val) {
-  const prev=splitPct; splitPct=Math.min(100,Math.max(0,+val)); if(Math.abs(splitPct-prev)>=5) haptic('light');
-  const fill=document.getElementById('split-fill');
-  const label=document.getElementById('split-center-label');
-  const slider=document.querySelector('.split-slider-wrap input[type=range]');
-  const jIn=document.getElementById('split-j');
-  const kIn=document.getElementById('split-k');
-  if(fill)fill.style.width=splitPct+'%';
-  if(label)label.textContent=splitPct===50?'50 / 50':splitPct+' / '+(100-splitPct);
-  if(slider)slider.value=splitPct;
-  if(jIn)jIn.value=splitPct;
-  if(kIn)kIn.value=100-splitPct;
+function setSplitPreset(type) {
+  haptic('light');
+  if (type === 'equal') curPartnerPct = 50;
+  else if (type === 'partner-all') curPartnerPct = 100;
+  else if (type === 'payer-all') curPartnerPct = 0;
+  updateSplitUI();
 }
-function updateSplitFromJ(val){let v=parseInt(val);if(!isNaN(v))updateSplit(Math.min(100,Math.max(0,v)));}
-function updateSplitFromK(val){let v=parseInt(val);if(!isNaN(v))updateSplit(100-Math.min(100,Math.max(0,v)));}
+
+function onSliderInput(val) {
+  const prev = curPartnerPct;
+  curPartnerPct = Math.min(100, Math.max(0, +val));
+  if (Math.abs(curPartnerPct - prev) >= 5) haptic('light');
+  updateSplitUI();
+}
+
+function onPayerPctInput(val) {
+  const v = parseInt(val);
+  if (!isNaN(v)) {
+    curPartnerPct = 100 - Math.min(100, Math.max(0, v));
+    updateSplitUI();
+  }
+}
+
+function onPartnerPctInput(val) {
+  const v = parseInt(val);
+  if (!isNaN(v)) {
+    curPartnerPct = Math.min(100, Math.max(0, v));
+    updateSplitUI();
+  }
+}
+
+function onAmountInput() {
+  updateSplitUI();
+}
+
+function onPayerChange(val) {
+  haptic('light');
+  updateSplitUI();
+}
+
+function updateSplitUI() {
+  const payerEl = document.getElementById('f-payer');
+  const payer = payerEl ? payerEl.value : 'Jombs';
+  const partner = (payer === 'Jombs') ? 'Krombs' : 'Jombs';
+  const amountVal = parseFloat(document.getElementById('f-amount')?.value) || 0;
+  const partnerPct = curPartnerPct;
+  const payerPct = 100 - partnerPct;
+  const partnerAmt = +(amountVal * partnerPct / 100).toFixed(2);
+  const payerAmt = +(amountVal - partnerAmt).toFixed(2);
+
+  const p50 = document.getElementById('preset-50');
+  const pPartner = document.getElementById('preset-partner-all');
+  const pPayer = document.getElementById('preset-payer-all');
+  if (p50) p50.classList.toggle('active', partnerPct === 50);
+  if (pPartner) {
+    pPartner.classList.toggle('active', partnerPct === 100);
+    pPartner.textContent = `${partner} owes all`;
+  }
+  if (pPayer) {
+    pPayer.classList.toggle('active', partnerPct === 0);
+    pPayer.textContent = `I cover all`;
+  }
+
+  const slider = document.getElementById('split-range');
+  if (slider) slider.value = partnerPct;
+
+  const cardPayerName = document.getElementById('card-payer-name');
+  const cardPartnerName = document.getElementById('card-partner-name');
+  const cardPayerAmt = document.getElementById('card-payer-amount');
+  const cardPartnerAmt = document.getElementById('card-partner-amount');
+  const inputPayerPct = document.getElementById('split-payer-pct');
+  const inputPartnerPct = document.getElementById('split-partner-pct');
+
+  if (cardPayerName) cardPayerName.textContent = payer;
+  if (cardPartnerName) cardPartnerName.textContent = partner;
+  if (cardPayerAmt) cardPayerAmt.textContent = fmt(payerAmt);
+  if (cardPartnerAmt) cardPartnerAmt.textContent = fmt(partnerAmt);
+  if (inputPayerPct && document.activeElement !== inputPayerPct) inputPayerPct.value = payerPct;
+  if (inputPartnerPct && document.activeElement !== inputPartnerPct) inputPartnerPct.value = partnerPct;
+
+  const impactWrap = document.getElementById('split-impact-wrap');
+  if (impactWrap) impactWrap.innerHTML = getImpactHtml(payer, partner, amountVal, partnerPct);
+}
 
 function getFormVals() {
   return {
@@ -559,14 +867,15 @@ function getFormVals() {
 async function addExpense() {
   const {desc,amount,payer,note}=getFormVals();
   if(!desc||isNaN(amount)||amount<=0){toast('Please fill in description and amount');return;}
+  const calculatedJPct = (payer === 'Jombs') ? (100 - curPartnerPct) : curPartnerPct;
   try {
     await db.collection('expenses').add({
-      type:'expense',desc,amount:+amount.toFixed(2),payer,jombsPct:splitPct,note:note||'',
+      type:'expense',desc,amount:+amount.toFixed(2),payer,jombsPct:calculatedJPct,note:note||'',
       date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'}),
       monthKey:curMonthKey(),
       createdAt:firebase.firestore.FieldValue.serverTimestamp()
     });
-    writeHistory({action:'added',type:'expense',desc,amount:+amount.toFixed(2),payer,jombsPct:splitPct,note:note||'',date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'}),monthKey:curMonthKey()});
+    writeHistory({action:'added',type:'expense',desc,amount:+amount.toFixed(2),payer,jombsPct:calculatedJPct,note:note||'',date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'}),monthKey:curMonthKey()});
     formOpen=false; haptic('success'); toast('Expense added');
   }catch(e){toast('Error: '+e.message);}
 }
@@ -574,13 +883,14 @@ async function addExpense() {
 async function saveEdit() {
   const {desc,amount,payer,note}=getFormVals();
   if(!desc||isNaN(amount)||amount<=0){toast('Please fill in description and amount');return;}
+  const calculatedJPct = (payer === 'Jombs') ? (100 - curPartnerPct) : curPartnerPct;
   try {
     const orig=expenses.find(e=>e.id===editingId);
     await db.collection('expenses').doc(editingId).update({
-      desc,amount:+amount.toFixed(2),payer,jombsPct:splitPct,note:note||'',
+      desc,amount:+amount.toFixed(2),payer,jombsPct:calculatedJPct,note:note||'',
       date:orig?.date||new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'})
     });
-    writeHistory({action:'edited',type:'expense',desc,amount:+amount.toFixed(2),payer,jombsPct:splitPct,note:note||'',date:orig?.date||new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'}),monthKey:orig?.monthKey||curMonthKey()});
+    writeHistory({action:'edited',type:'expense',desc,amount:+amount.toFixed(2),payer,jombsPct:calculatedJPct,note:note||'',date:orig?.date||new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'}),monthKey:orig?.monthKey||curMonthKey()});
     formOpen=false;editingId=null;haptic('success');toast('Saved');
   }catch(e){toast('Error: '+e.message);}
 }
@@ -619,6 +929,12 @@ function promptSettle(payer,recipient,amount) {
         const settleRef=db.collection('history').doc();
         batch.set(settleRef,{action:'settled',type:'settle',payer,recipient,amount:+amount.toFixed(2),date,monthKey:mKey,createdAt:ts});
         await batch.commit();
+        sendNtfy({
+          title: `💸 Settled up — ${fmt(amount)}`,
+          message: `${payer} paid ${recipient} ${fmt(amount)}. Balance is clear! ✨`,
+          tags: 'tada,handshake',
+          priority: '4'
+        });
         haptic('success');toast('Settled up — slate is clean');
       }catch(e){toast('Error: '+e.message);console.error(e);}
     }
@@ -720,11 +1036,59 @@ function exportCSV() {
 let toastTimer;
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2800);}
 
-// ── Theme ───────────────────────────────────────────────────
-const THEME_KEY='jk_theme';
-function applyTheme(t){document.documentElement.setAttribute('data-theme',t);const btn=document.getElementById('theme-btn');if(btn)btn.textContent=t==='dark'?'☀ Light':'☾ Dark';localStorage.setItem(THEME_KEY,t);}
-function toggleTheme(){haptic('light');applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');}
-(()=>{const s=localStorage.getItem(THEME_KEY);if(s){applyTheme(s);return;}if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)applyTheme('dark');})();
+// ── Theme (Auto / Night / Day) ──────────────────────────────
+const THEME_KEY = 'jk_theme_mode';
+
+function getThemeSetting() {
+  return localStorage.getItem(THEME_KEY) || 'auto';
+}
+
+function applyTheme() {
+  const setting = getThemeSetting();
+  let effective = setting;
+  if (setting === 'auto') {
+    const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    effective = isDark ? 'dark' : 'light';
+  }
+  document.documentElement.setAttribute('data-theme', effective);
+
+  // Update theme-color meta tag for Safari notch & mobile chrome bar
+  const metaTheme = document.getElementById('meta-theme-color');
+  if (metaTheme) {
+    metaTheme.setAttribute('content', effective === 'dark' ? '#0d0d0c' : '#f8f6f2');
+  }
+
+  // Update header button label & icon
+  const btn = document.getElementById('theme-btn');
+  if (btn) {
+    if (setting === 'auto') {
+      btn.innerHTML = `<span class="theme-icon">◐</span> Auto`;
+      btn.title = `Theme: Following system (${effective === 'dark' ? 'Night' : 'Day'}). Tap to switch to Night.`;
+    } else if (setting === 'dark') {
+      btn.innerHTML = `<span class="theme-icon">☾</span> Night`;
+      btn.title = `Theme: Night mode. Tap to switch to Day.`;
+    } else {
+      btn.innerHTML = `<span class="theme-icon">☀</span> Day`;
+      btn.title = `Theme: Day mode. Tap to switch to Auto.`;
+    }
+  }
+}
+
+function cycleTheme() {
+  haptic('light');
+  const current = getThemeSetting();
+  const next = current === 'auto' ? 'dark' : (current === 'dark' ? 'light' : 'auto');
+  localStorage.setItem(THEME_KEY, next);
+  applyTheme();
+  const label = next === 'auto' ? 'Auto (system mode)' : (next === 'dark' ? 'Night mode' : 'Day mode');
+  toast(`Theme: ${label}`);
+}
+
+if (window.matchMedia) {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (getThemeSetting() === 'auto') applyTheme();
+  });
+}
 
 // ── Swipe / drag ────────────────────────────────────────────
 let activeSwipe=null;
@@ -755,69 +1119,108 @@ function attachSwipeHandlers(){
 }
 function closeSwipe(item){if(!item)return;item.classList.remove('swiped');item.closest('.swipe-wrapper')?.querySelector('.delete-reveal')?.classList.remove('visible');if(activeSwipe===item)activeSwipe=null;}
 
-// ── Notifications ───────────────────────────────────────────
-const NOTIF_KEY = 'jk_notify_enabled';
-let notifEnabled = localStorage.getItem(NOTIF_KEY) === 'true';
-let knownIds = new Set();
-let firstLoad = true;
+// ── Push Notifications (ntfy) ───────────────────────────────
+const NTFY_KEY = 'jk_ntfy_topic';
+const DEFAULT_NTFY_TOPIC = 'jombs-krombs-expenses';
 
-function notifSupported() { return 'Notification' in window; }
+function getNtfyTopic() {
+  const saved = localStorage.getItem(NTFY_KEY);
+  return (saved !== null && saved !== '') ? saved : DEFAULT_NTFY_TOPIC;
+}
 
-async function requestNotifPermission() {
-  if (!notifSupported()) { toast('Notifications not supported in this browser'); return; }
-  const perm = await Notification.requestPermission();
-  if (perm === 'granted') {
-    notifEnabled = true;
-    localStorage.setItem(NOTIF_KEY, 'true');
-    toast('Notifications on ✓');
-    renderNotifBtn();
-  } else {
-    toast('Permission denied — check browser settings');
+function saveNtfyTopic(val) {
+  const clean = (val || '').trim().replace(/^https?:\/\/ntfy\.sh\//i, '').replace(/[^a-zA-Z0-9_-]/g, '');
+  const topic = clean || DEFAULT_NTFY_TOPIC;
+  localStorage.setItem(NTFY_KEY, topic);
+  return topic;
+}
+
+async function sendNtfy({ title, message, tags = 'receipt', priority = '3' }) {
+  const topic = getNtfyTopic();
+  if (!topic) return;
+  try {
+    await fetch(`https://ntfy.sh/${encodeURIComponent(topic)}`, {
+      method: 'POST',
+      headers: {
+        'Title': title,
+        'Tags': tags,
+        'Priority': priority,
+        'Click': window.location.href
+      },
+      body: message
+    });
+  } catch (err) {
+    console.warn('ntfy push failed:', err);
   }
 }
 
-function disableNotifs() {
-  notifEnabled = false;
-  localStorage.setItem(NOTIF_KEY, 'false');
-  toast('Notifications off');
-  renderNotifBtn();
-}
-
-function renderNotifBtn() {
-  const btn = document.getElementById('notif-btn');
-  if (!btn || !notifSupported()) return;
-  if (Notification.permission === 'granted' && notifEnabled) {
-    btn.textContent = '🔔';
-    btn.title = 'Notifications on — tap to turn off';
-    btn.onclick = disableNotifs;
-  } else {
-    btn.textContent = '🔕';
-    btn.title = 'Tap to enable notifications';
-    btn.onclick = requestNotifPermission;
-  }
-}
-
-function fireNotif(title, body) {
-  if (!notifEnabled || Notification.permission !== 'granted') return;
-  new Notification(title, { body, icon: 'https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f4b0.png', badge: 'https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f4b0.png' });
-}
-
-function checkNewEntries(incoming) {
-  if (firstLoad) {
-    incoming.forEach(e => knownIds.add(e.id));
-    firstLoad = false;
-    return;
-  }
-  incoming.forEach(e => {
-    if (knownIds.has(e.id)) return;
-    knownIds.add(e.id);
-    if (e.type === 'settle') {
-      fireNotif('💸 Settled up!', `${e.payer} marked the balance as settled (${fmt(e.amount)})`);
+async function testNtfy() {
+  const topic = getNtfyTopic();
+  haptic('medium');
+  toast('Sending test alert...');
+  try {
+    const res = await fetch(`https://ntfy.sh/${encodeURIComponent(topic)}`, {
+      method: 'POST',
+      headers: {
+        'Title': '🔔 Jombs & Krombs test alert',
+        'Tags': 'tada,sparkles',
+        'Priority': '4',
+        'Click': window.location.href
+      },
+      body: 'Push notifications are connected! Alerts will appear on lockscreen.'
+    });
+    if (res.ok) {
+      toast('Alert sent! Check your phone 📲');
     } else {
-      const j = getJPct(e), splitStr = j === 50 ? '50/50' : `${j}/${100-j}`;
-      fireNotif(`🧾 New expense from ${e.payer}`, `${e.desc} — ${fmt(e.amount)} (split ${splitStr})`);
+      toast('ntfy error: ' + res.status);
     }
-  });
+  } catch (err) {
+    toast('Error sending alert: ' + err.message);
+  }
+}
+
+function openNtfyModal() {
+  haptic('light');
+  const topic = getNtfyTopic();
+  document.getElementById('modal-root').innerHTML = `
+    <div class="modal-backdrop" id="modal-backdrop">
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title">🔔 Push alerts (ntfy)</div>
+        <div class="modal-body" style="margin-bottom:1.25rem;">
+          <p style="margin-bottom:0.85rem;color:var(--text-2);font-size:14px;line-height:1.5;">
+            Instant push alerts for your iPhone and Fold 7 lockscreens without emailing your inboxes.
+          </p>
+          <div class="field" style="margin-bottom:0.75rem;">
+            <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-3);display:block;margin-bottom:5px;">ntfy topic</label>
+            <input id="ntfy-topic-input" type="text" value="${topic}" placeholder="jombs-krombs-expenses" style="width:100%;padding:10px 12px;font-size:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-family:inherit;outline:none;" />
+          </div>
+          <div style="margin-bottom:1rem;">
+            <button class="btn btn-full" style="padding:10px;font-size:13px;" onclick="testNtfy()">📲 Send test alert now</button>
+          </div>
+          <div style="background:var(--surface-subtle);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--text-2);line-height:1.55;">
+            <strong style="color:var(--text);display:block;margin-bottom:4px;font-size:13px;">Phone setup (1-minute):</strong>
+            1. Install free <strong>ntfy</strong> app on iPhone (App Store) &amp; Fold 7 (Google Play).<br/>
+            2. Tap <strong>+</strong> in the ntfy app and subscribe to: <code style="font-size:12px;color:var(--green);font-weight:600;">${topic}</code><br/>
+            3. Tap <em>Send test alert</em> above to see it ring on your lockscreen!
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn" id="modal-cancel" onclick="closeModal()">Close</button>
+          <button class="btn btn-primary" onclick="saveNtfySettings()">Save topic</button>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('modal-backdrop').onclick = e => { if (e.target === e.currentTarget) closeModal(); };
+}
+
+function saveNtfySettings() {
+  const input = document.getElementById('ntfy-topic-input');
+  if (input) {
+    const topic = saveNtfyTopic(input.value);
+    toast(`Topic saved: ${topic}`);
+    closeModal();
+  }
 }
 
 // ── Password ─────────────────────────────────────────────────
@@ -846,13 +1249,13 @@ function bootApp() {
 }
 
 // ── Boot ────────────────────────────────────────────────────
+applyTheme();
 if (localStorage.getItem(PW_KEY) === 'true') {
   document.getElementById('password-overlay').style.display = 'none';
   bootApp();
 } else {
   setTimeout(() => document.getElementById('pw-input').focus(), 100);
 }
-setTimeout(renderNotifBtn, 0);
 </script>
 </body>
 </html>
