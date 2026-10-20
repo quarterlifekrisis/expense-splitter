@@ -474,7 +474,7 @@ main {
   margin-bottom: 6px;
   font-weight: 700;
 }
-.field input, .field textarea {
+.field input:not([type=range]):not(.split-pct-input), .field textarea {
   width: 100%;
   padding: 12px 13px;
   font-size: 16px; /* 16px prevents iOS Safari from zooming into the input */
@@ -487,11 +487,11 @@ main {
   scroll-margin-top: 80px;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
-.field input:focus, .field textarea:focus {
+.field input:not([type=range]):not(.split-pct-input):focus, .field textarea:focus {
   border-color: var(--text);
   box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.05);
 }
-[data-theme="dark"] .field input:focus, [data-theme="dark"] .field textarea:focus {
+[data-theme="dark"] .field input:not([type=range]):not(.split-pct-input):focus, [data-theme="dark"] .field textarea:focus {
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
 }
 
@@ -606,17 +606,178 @@ main {
 .split-badge { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.06em; padding: 1.5px 6px; border-radius: 4px; background: var(--surface); border: 1px solid var(--border); color: var(--text-2); font-weight: 600; }
 .split-badge.muted { color: var(--text-3); }
 .split-amount { font-size: 19px; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1.1; letter-spacing: -0.02em; }
-.split-pct-label { display: flex; align-items: center; font-size: 11.5px; color: var(--text-3); margin-top: 2px; font-variant-numeric: tabular-nums; font-weight: 500; }
-.split-pct-input { width: 38px; padding: 2px 3px; font-size: 16px; font-family: inherit; font-weight: 600; text-align: right; border: 1px solid transparent; border-radius: 4px; background: transparent; color: var(--text-2); -moz-appearance: textfield; transform: scale(0.8); transform-origin: right center; }
-.split-pct-input:hover, .split-pct-input:focus { border-color: var(--border-med); background: var(--surface); color: var(--text); outline: none; }
-.split-pct-input::-webkit-outer-spin-button, .split-pct-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.split-pct-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+  font-variant-numeric: tabular-nums;
+}
+.split-card .split-pct-input {
+  width: 34px !important;
+  height: 24px !important;
+  padding: 0 2px !important;
+  font-size: 14.5px !important;
+  line-height: 24px !important;
+  font-family: inherit !important;
+  font-weight: 700 !important;
+  text-align: center !important;
+  border: 1px solid var(--border-med) !important;
+  border-radius: 6px !important;
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  outline: none !important;
+  -moz-appearance: textfield !important;
+  margin: 0 !important;
+  scroll-margin-top: 0 !important;
+  transform: none !important;
+  box-sizing: border-box !important;
+}
+.split-card .split-pct-input:focus {
+  border-color: var(--text) !important;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.08) !important;
+}
+[data-theme="dark"] .split-card .split-pct-input:focus {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15) !important;
+}
+.split-card .split-pct-input::-webkit-outer-spin-button,
+.split-card .split-pct-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.split-pct-sym {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-3);
+  user-select: none;
+}
 .split-divider-line { width: 1px; height: 38px; background: var(--border-med); margin: 0 16px; flex-shrink: 0; }
 
-.split-slider-wrap { position: relative; width: 100%; padding: 4px 0; }
-.split-slider-wrap input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 3px; background: var(--border-med); outline: none; margin: 0; cursor: pointer; display: block; }
-.split-slider-wrap input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); border: 2px solid var(--surface); box-shadow: 0 1px 4px rgba(0,0,0,0.25); cursor: grab; transition: transform 0.1s ease; }
-.split-slider-wrap input[type=range]:active::-webkit-slider-thumb { transform: scale(1.15); cursor: grabbing; }
-.split-slider-wrap input[type=range]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; }
+/* ── Tactile Hardware Slider ──────────────────────────────── */
+.split-slider-wrap {
+  position: relative;
+  width: 100%;
+  padding: 8px 0 4px;
+  display: flex;
+  align-items: center;
+}
+.split-slider-wrap input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100% !important;
+  height: 8px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 999px !important;
+  background: rgba(0, 0, 0, 0.08) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.12) !important;
+  outline: none !important;
+  cursor: pointer;
+  display: block;
+}
+[data-theme="dark"] .split-slider-wrap input[type=range] {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* WebKit Track */
+.split-slider-wrap input[type=range]::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 999px;
+  background: transparent;
+  border: none;
+}
+
+/* WebKit Thumb: Tactile fader button with 3D bevel & grip ridges */
+.split-slider-wrap input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 36px;
+  height: 24px;
+  border-radius: 7px;
+  margin-top: -9px; /* Perfectly centers 24px thumb on 8px track */
+  background:
+    linear-gradient(90deg,
+      transparent calc(50% - 5px),
+      rgba(0, 0, 0, 0.22) calc(50% - 5px), rgba(0, 0, 0, 0.22) calc(50% - 4px),
+      transparent calc(50% - 4px), transparent calc(50% - 1px),
+      rgba(0, 0, 0, 0.22) calc(50% - 1px), rgba(0, 0, 0, 0.22) calc(50%),
+      transparent calc(50%), transparent calc(50% + 3px),
+      rgba(0, 0, 0, 0.22) calc(50% + 3px), rgba(0, 0, 0, 0.22) calc(50% + 4px),
+      transparent calc(50% + 4px)
+    ),
+    linear-gradient(180deg, #ffffff 0%, #f4f5f7 45%, #e1e4e8 100%);
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  box-shadow:
+    0 2px 5px rgba(0, 0, 0, 0.16),
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  cursor: grab;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.split-slider-wrap input[type=range]:active::-webkit-slider-thumb {
+  cursor: grabbing;
+  transform: scale(1.05);
+  box-shadow:
+    0 3px 8px rgba(0, 0, 0, 0.22),
+    0 1px 3px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+/* Dark mode WebKit Thumb */
+[data-theme="dark"] .split-slider-wrap input[type=range]::-webkit-slider-thumb {
+  background:
+    linear-gradient(90deg,
+      transparent calc(50% - 5px),
+      rgba(255, 255, 255, 0.25) calc(50% - 5px), rgba(255, 255, 255, 0.25) calc(50% - 4px),
+      transparent calc(50% - 4px), transparent calc(50% - 1px),
+      rgba(255, 255, 255, 0.25) calc(50% - 1px), rgba(255, 255, 255, 0.25) calc(50%),
+      transparent calc(50%), transparent calc(50% + 3px),
+      rgba(255, 255, 255, 0.25) calc(50% + 3px), rgba(255, 255, 255, 0.25) calc(50% + 4px),
+      transparent calc(50% + 4px)
+    ),
+    linear-gradient(180deg, #383a42 0%, #282a30 45%, #1a1b1f 100%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.6),
+    0 1px 2px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+[data-theme="dark"] .split-slider-wrap input[type=range]:active::-webkit-slider-thumb {
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.75),
+    0 1px 3px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Firefox Track & Thumb */
+.split-slider-wrap input[type=range]::-moz-range-track {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border);
+}
+[data-theme="dark"] .split-slider-wrap input[type=range]::-moz-range-track {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.split-slider-wrap input[type=range]::-moz-range-thumb {
+  width: 36px;
+  height: 24px;
+  border-radius: 7px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  background: linear-gradient(180deg, #ffffff 0%, #f4f5f7 45%, #e1e4e8 100%);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16);
+  cursor: grab;
+}
+[data-theme="dark"] .split-slider-wrap input[type=range]::-moz-range-thumb {
+  background: linear-gradient(180deg, #383a42 0%, #282a30 45%, #1a1b1f 100%);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
 
 .split-impact-note { font-size: 12.5px; color: var(--text-2); text-align: center; line-height: 1.4; padding-top: 2px; }
 .split-impact-note strong { color: var(--text); font-weight: 700; }
@@ -977,7 +1138,7 @@ function showModal({title, body, confirm='Confirm', cancel='Cancel', danger=fals
 function closeModal() { document.getElementById('modal-root').innerHTML = ''; }
 
 // ── Config & Version ────────────────────────────────────────
-const APP_VERSION = '2.4';
+const APP_VERSION = '2.5';
 const CFG_KEY = 'jk_firebase_cfg';
 const PW_KEY = 'jk_auth';
 const CORRECT_PW = 'misterben';
@@ -1334,7 +1495,7 @@ function renderForm() {
                 <span class="split-badge">paid</span>
               </div>
               <div class="split-amount" id="card-payer-amount">${fmt(payerAmt)}</div>
-              <div class="split-pct-label"><input type="number" id="split-payer-pct" class="split-pct-input" min="0" max="100" value="${payerPct}" oninput="onPayerPctInput(this.value)" />%</div>
+              <div class="split-pct-label"><input type="number" id="split-payer-pct" class="split-pct-input" min="0" max="100" value="${payerPct}" oninput="onPayerPctInput(this.value)" /><span class="split-pct-sym">%</span></div>
             </div>
 
             <div class="split-divider-line"></div>
@@ -1345,7 +1506,7 @@ function renderForm() {
                 <span class="split-badge muted">owes</span>
               </div>
               <div class="split-amount" id="card-partner-amount">${fmt(partnerAmt)}</div>
-              <div class="split-pct-label"><input type="number" id="split-partner-pct" class="split-pct-input" min="0" max="100" value="${partnerPct}" oninput="onPartnerPctInput(this.value)" />%</div>
+              <div class="split-pct-label"><input type="number" id="split-partner-pct" class="split-pct-input" min="0" max="100" value="${partnerPct}" oninput="onPartnerPctInput(this.value)" /><span class="split-pct-sym">%</span></div>
             </div>
           </div>
 
@@ -1356,12 +1517,14 @@ function renderForm() {
           <div class="split-impact-note" id="split-impact-wrap">${getImpactHtml(p, partner, amountVal, partnerPct)}</div>
         </div>
       </div>
-    <div class="form-notif-row" onclick="toggleFormNotif()" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface-subtle);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:1rem;cursor:pointer;-webkit-tap-highlight-color:transparent;">
-      <div style="display:flex;align-items:center;gap:8px;">
+    </div>
+
+    <div class="form-notif-row" onclick="toggleFormNotif()" style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--surface-subtle);border:1px solid var(--border);border-radius:var(--radius-sm);margin-top:14px;margin-bottom:18px;cursor:pointer;-webkit-tap-highlight-color:transparent;">
+      <div style="display:flex;align-items:center;gap:10px;">
         <span style="font-size:16px;">${isNtfyEnabled() ? '🔔' : '🔕'}</span>
         <div>
-          <div style="font-size:12.5px;font-weight:600;color:var(--text);">${isNtfyEnabled() ? 'Send push alert to partner' : 'Silent entry (alerts muted)'}</div>
-          <div style="font-size:11px;color:var(--text-3);">${isNtfyEnabled() ? 'Partner will be notified on phone' : 'No push alert will be sent'}</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);">${isNtfyEnabled() ? 'Send push alert' : 'Push alert muted'}</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:1px;">${isNtfyEnabled() ? 'Notification will appear on phone' : 'No notification will be sent'}</div>
         </div>
       </div>
       <div class="form-notif-badge" style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:var(--radius-pill);background:${isNtfyEnabled() ? 'var(--accent)' : 'var(--surface)'};color:${isNtfyEnabled() ? 'var(--accent-contrast)' : 'var(--text-2)'};border:1px solid var(--border-med);">${isNtfyEnabled() ? 'ON' : 'OFF'}</div>
@@ -1816,8 +1979,8 @@ function toggleFormNotif() {
     if (icon) icon.textContent = on ? '🔔' : '🔕';
     const texts = row.querySelectorAll('div > div');
     if (texts.length >= 2) {
-      texts[0].textContent = on ? 'Send push alert to partner' : 'Silent entry (alerts muted)';
-      texts[1].textContent = on ? 'Partner will be notified on phone' : 'No push alert will be sent';
+      texts[0].textContent = on ? 'Send push alert' : 'Push alert muted';
+      texts[1].textContent = on ? 'Notification will appear on phone' : 'No notification will be sent';
     }
     const badge = row.querySelector('.form-notif-badge');
     if (badge) {
@@ -1916,10 +2079,10 @@ function openNtfyModal() {
                 <span>${enabled ? '🔔 Push alerts enabled' : '🔕 Push alerts muted'}</span>
               </div>
               <div style="font-size:12px;color:var(--text-2);line-height:1.4;">
-                ${enabled ? 'Alerts are sent to partner when you add or settle expenses.' : 'Alerts muted on this phone. Add expenses without buzzing partner.'}
+                ${enabled ? 'Alerts are sent when you add or settle expenses.' : 'Alerts muted on this phone. Add expenses silently.'}
               </div>
               <div style="font-size:11px;color:var(--text-3);margin-top:4px;">
-                Only affects this phone. Your partner’s phone is unaffected.
+                Only affects this phone. Other devices are unaffected.
               </div>
             </div>
             <button type="button" class="btn" onclick="toggleNtfyModalState()" style="padding:6px 14px;font-size:12px;font-weight:700;border-radius:var(--radius-pill);min-width:64px;background:${enabled ? 'var(--accent)' : 'var(--surface)'};color:${enabled ? 'var(--accent-contrast)' : 'var(--text)'};border:1px solid var(--border-med);cursor:pointer;">
