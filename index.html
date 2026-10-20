@@ -212,6 +212,9 @@ header.scrolled .header-due-pill {
 .header-circle-btn:active {
   transform: scale(0.92);
 }
+.header-circle-btn.muted {
+  opacity: 0.65;
+}
 .theme-icon {
   display: inline-flex;
   align-items: center;
@@ -974,7 +977,7 @@ function showModal({title, body, confirm='Confirm', cancel='Cancel', danger=fals
 function closeModal() { document.getElementById('modal-root').innerHTML = ''; }
 
 // ── Config & Version ────────────────────────────────────────
-const APP_VERSION = '2.3';
+const APP_VERSION = '2.4';
 const CFG_KEY = 'jk_firebase_cfg';
 const PW_KEY = 'jk_auth';
 const CORRECT_PW = 'misterben';
@@ -1174,7 +1177,7 @@ function render() {
     <button class="view-log-btn" onclick="openLog()">📋 Full activity history (${historyEntries.length})</button>`;
 
   document.getElementById('app').innerHTML=`
-    <div class="hero-balance-card">
+    <div class="hero-balance-card" id="hero-card">
       <div class="hero-top-row">
         <div class="hero-status-tag ${canSettle ? 'owing' : 'settled'}">
           ${canSettle ? `<span class="status-dot"></span><strong>${settler}</strong> owes <strong>${recipient}</strong>` : `✓ All square`}
@@ -1183,7 +1186,7 @@ function render() {
       </div>
 
       <div class="hero-amount-wrap">
-        <div class="hero-amount ${canSettle ? '' : 'settled'}">${canSettle ? fmt(settleAmt) : '£0.00'}</div>
+        <div class="hero-amount ${canSettle ? '' : 'settled'}" id="hero-amount">${canSettle ? fmt(settleAmt) : '£0.00'}</div>
         ${canSettle ? `<button class="btn-settle-pill" onclick="promptSettle('${settler}','${recipient}',${settleAmt})">Settle up</button>` : ''}
       </div>
 
@@ -1212,14 +1215,33 @@ function render() {
   if(formOpen)setTimeout(()=>{const el=document.getElementById('f-desc');if(el)el.focus();},50);
   setTimeout(attachSwipeHandlers,0);
   applyTheme();
+  updateNtfyHeaderBtn();
   handleScroll();
 }
 
 function handleScroll() {
   const header = document.getElementById('main-header');
   if (!header) return;
-  const y = window.pageYOffset || document.documentElement.scrollTop || window.scrollY || 0;
-  header.classList.toggle('scrolled', y > 25);
+  const heroAmt = document.getElementById('hero-amount') || document.querySelector('.hero-amount');
+  let shouldScroll = false;
+  if (heroAmt) {
+    const heroRect = heroAmt.getBoundingClientRect();
+    const headerRect = header.getBoundingClientRect();
+    // Only switch to sticky amount once the big hero Amount text has scrolled
+    // past the sticky header and is no longer visible on screen (roughly half the hero tile).
+    // A 12px hysteresis buffer prevents flicker at the boundary.
+    const isCurrentlyScrolled = header.classList.contains('scrolled');
+    const threshold = headerRect.bottom;
+    if (isCurrentlyScrolled) {
+      shouldScroll = (heroRect.bottom <= threshold + 12);
+    } else {
+      shouldScroll = (heroRect.bottom <= threshold);
+    }
+  } else {
+    const y = window.pageYOffset || document.documentElement.scrollTop || window.scrollY || 0;
+    shouldScroll = y > 140;
+  }
+  header.classList.toggle('scrolled', shouldScroll);
 }
 
 let scrollTicking = false;
@@ -1334,6 +1356,15 @@ function renderForm() {
           <div class="split-impact-note" id="split-impact-wrap">${getImpactHtml(p, partner, amountVal, partnerPct)}</div>
         </div>
       </div>
+    <div class="form-notif-row" onclick="toggleFormNotif()" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface-subtle);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:1rem;cursor:pointer;-webkit-tap-highlight-color:transparent;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:16px;">${isNtfyEnabled() ? '🔔' : '🔕'}</span>
+        <div>
+          <div style="font-size:12.5px;font-weight:600;color:var(--text);">${isNtfyEnabled() ? 'Send push alert to partner' : 'Silent entry (alerts muted)'}</div>
+          <div style="font-size:11px;color:var(--text-3);">${isNtfyEnabled() ? 'Partner will be notified on phone' : 'No push alert will be sent'}</div>
+        </div>
+      </div>
+      <div class="form-notif-badge" style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:var(--radius-pill);background:${isNtfyEnabled() ? 'var(--accent)' : 'var(--surface)'};color:${isNtfyEnabled() ? 'var(--accent-contrast)' : 'var(--text-2)'};border:1px solid var(--border-med);">${isNtfyEnabled() ? 'ON' : 'OFF'}</div>
     </div>
     <div class="form-actions">
       <button type="button" class="btn btn-secondary" onclick="closeForm()">Cancel</button>
@@ -1489,6 +1520,17 @@ async function addExpense() {
       createdAt:firebase.firestore.FieldValue.serverTimestamp()
     });
     writeHistory({action:'added',type:'expense',desc,amount:+amount.toFixed(2),payer,jombsPct:calculatedJPct,note:note||'',date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'}),monthKey:curMonthKey()});
+    
+    // Dispatch push alert to partner if not muted on this device
+    const partner = (payer === 'Jombs') ? 'Krombs' : 'Jombs';
+    const splitLabel = curPartnerPct === 50 ? '50/50' : (curPartnerPct === 100 ? `${partner} owes all` : (curPartnerPct === 0 ? `${payer} covers all` : `${payer} ${100-curPartnerPct}% / ${partner} ${curPartnerPct}%`));
+    sendNtfy({
+      title: `🧾 ${payer} added: ${desc}`,
+      message: `${desc} — ${fmt(amount)} (Split: ${splitLabel})`,
+      tags: ['receipt'],
+      priority: 3
+    });
+
     formOpen=false; haptic('success'); toast('Expense added');
   }catch(e){toast('Error: '+e.message);}
 }
@@ -1734,7 +1776,62 @@ function closeSwipe(item){if(!item)return;item.classList.remove('swiped');item.c
 
 // ── Push Notifications (ntfy) ───────────────────────────────
 const NTFY_KEY = 'jk_ntfy_topic';
+const NTFY_ENABLED_KEY = 'jk_ntfy_enabled';
 const DEFAULT_NTFY_TOPIC = 'jombs-krombs-expenses';
+
+function isNtfyEnabled() {
+  const saved = localStorage.getItem(NTFY_ENABLED_KEY);
+  return saved === null || saved === 'true'; // default: enabled
+}
+
+function setNtfyEnabled(val) {
+  localStorage.setItem(NTFY_ENABLED_KEY, val ? 'true' : 'false');
+  updateNtfyHeaderBtn();
+}
+
+function toggleNtfyEnabled() {
+  const next = !isNtfyEnabled();
+  setNtfyEnabled(next);
+  haptic('medium');
+  toast(next ? 'Push alerts on (this device) 🔔' : 'Push alerts muted (this device) 🔕');
+  return next;
+}
+
+function updateNtfyHeaderBtn() {
+  const btn = document.getElementById('ntfy-btn');
+  if (!btn) return;
+  const on = isNtfyEnabled();
+  btn.innerHTML = on ? '🔔' : '🔕';
+  btn.title = on ? 'Push alerts active (tap to configure)' : 'Push alerts muted on this phone (tap to configure)';
+  btn.setAttribute('aria-label', on ? 'Push alerts active' : 'Push alerts muted');
+  btn.classList.toggle('muted', !on);
+}
+
+function toggleFormNotif() {
+  toggleNtfyEnabled();
+  const row = document.querySelector('.form-notif-row');
+  if (row) {
+    const on = isNtfyEnabled();
+    const icon = row.querySelector('span');
+    if (icon) icon.textContent = on ? '🔔' : '🔕';
+    const texts = row.querySelectorAll('div > div');
+    if (texts.length >= 2) {
+      texts[0].textContent = on ? 'Send push alert to partner' : 'Silent entry (alerts muted)';
+      texts[1].textContent = on ? 'Partner will be notified on phone' : 'No push alert will be sent';
+    }
+    const badge = row.querySelector('.form-notif-badge');
+    if (badge) {
+      badge.textContent = on ? 'ON' : 'OFF';
+      badge.style.background = on ? 'var(--accent)' : 'var(--surface)';
+      badge.style.color = on ? 'var(--accent-contrast)' : 'var(--text-2)';
+    }
+  }
+}
+
+function toggleNtfyModalState() {
+  toggleNtfyEnabled();
+  openNtfyModal();
+}
 
 function getNtfyTopic() {
   const saved = localStorage.getItem(NTFY_KEY);
@@ -1749,6 +1846,10 @@ function saveNtfyTopic(val) {
 }
 
 async function sendNtfy({ title, message, tags = ['receipt'], priority = 3 }) {
+  if (!isNtfyEnabled()) {
+    console.log('Push notification skipped: muted on this device');
+    return;
+  }
   const topic = getNtfyTopic();
   if (!topic) return;
   try {
@@ -1801,13 +1902,32 @@ async function testNtfy() {
 function openNtfyModal() {
   haptic('light');
   const topic = getNtfyTopic();
+  const enabled = isNtfyEnabled();
   document.getElementById('modal-root').innerHTML = `
     <div class="modal-backdrop" id="modal-backdrop">
       <div class="modal-sheet">
         <div class="modal-handle"></div>
-        <div class="modal-title">🔔 Push alerts (ntfy)</div>
+        <div class="modal-title">${enabled ? '🔔' : '🔕'} Push alerts (ntfy)</div>
         <div class="modal-body" style="margin-bottom:1.25rem;">
-          <p style="margin-bottom:0.85rem;color:var(--text-2);font-size:14px;line-height:1.5;">
+          
+          <div style="background:var(--surface-subtle);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <div style="flex:1;">
+              <div style="font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+                <span>${enabled ? '🔔 Push alerts enabled' : '🔕 Push alerts muted'}</span>
+              </div>
+              <div style="font-size:12px;color:var(--text-2);line-height:1.4;">
+                ${enabled ? 'Alerts are sent to partner when you add or settle expenses.' : 'Alerts muted on this phone. Add expenses without buzzing partner.'}
+              </div>
+              <div style="font-size:11px;color:var(--text-3);margin-top:4px;">
+                Only affects this phone. Your partner’s phone is unaffected.
+              </div>
+            </div>
+            <button type="button" class="btn" onclick="toggleNtfyModalState()" style="padding:6px 14px;font-size:12px;font-weight:700;border-radius:var(--radius-pill);min-width:64px;background:${enabled ? 'var(--accent)' : 'var(--surface)'};color:${enabled ? 'var(--accent-contrast)' : 'var(--text)'};border:1px solid var(--border-med);cursor:pointer;">
+              ${enabled ? 'ON' : 'OFF'}
+            </button>
+          </div>
+
+          <p style="margin-bottom:0.85rem;color:var(--text-2);font-size:13.5px;line-height:1.5;">
             Instant push alerts for your iPhone and Fold 7 lockscreens without emailing your inboxes.
           </p>
           <div class="field" style="margin-bottom:0.75rem;">
@@ -1867,6 +1987,7 @@ function bootApp() {
 
 // ── Boot ────────────────────────────────────────────────────
 applyTheme();
+updateNtfyHeaderBtn();
 if (localStorage.getItem(PW_KEY) === 'true') {
   document.getElementById('password-overlay').style.display = 'none';
   bootApp();
