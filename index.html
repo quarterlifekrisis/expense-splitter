@@ -943,11 +943,11 @@ function mkSplitLabel(e) {
   if (j === 50) return '50/50';
   if (e.payer === 'Jombs') {
     if (k === 100) return 'Krombs owes all';
-    if (j === 100) return 'Jombs covered all';
+    if (j === 100) return 'Jombs covers all';
     return `J ${j}% · K ${k}%`;
   } else {
     if (j === 100) return 'Jombs owes all';
-    if (k === 100) return 'Krombs covered all';
+    if (k === 100) return 'Krombs covers all';
     return `K ${k}% · J ${j}%`;
   }
 }
@@ -1117,7 +1117,7 @@ function renderForm() {
         <div class="split-pills">
           <button type="button" class="split-pill${partnerPct===50?' active':''}" id="preset-50" onclick="setSplitPreset('equal')">50 / 50</button>
           <button type="button" class="split-pill${partnerPct===100?' active':''}" id="preset-partner-all" onclick="setSplitPreset('partner-all')">${partner} owes all</button>
-          <button type="button" class="split-pill${partnerPct===0?' active':''}" id="preset-payer-all" onclick="setSplitPreset('payer-all')">I cover all</button>
+          <button type="button" class="split-pill${partnerPct===0?' active':''}" id="preset-payer-all" onclick="setSplitPreset('payer-all')">${p} covers all</button>
         </div>
 
         <div class="split-card">
@@ -1260,7 +1260,7 @@ function updateSplitUI() {
   }
   if (pPayer) {
     pPayer.classList.toggle('active', partnerPct === 0);
-    pPayer.textContent = `I cover all`;
+    pPayer.textContent = `${payer} covers all`;
   }
 
   const slider = document.getElementById('split-range');
