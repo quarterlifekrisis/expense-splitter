@@ -1564,19 +1564,22 @@ function saveNtfyTopic(val) {
   return topic;
 }
 
-async function sendNtfy({ title, message, tags = 'receipt', priority = '3' }) {
+async function sendNtfy({ title, message, tags = ['receipt'], priority = 3 }) {
   const topic = getNtfyTopic();
   if (!topic) return;
   try {
-    await fetch(`https://ntfy.sh/${encodeURIComponent(topic)}`, {
+    const tagArray = Array.isArray(tags) ? tags : String(tags).split(',').map(s=>s.trim()).filter(Boolean);
+    await fetch('https://ntfy.sh', {
       method: 'POST',
-      headers: {
-        'Title': title,
-        'Tags': tags,
-        'Priority': priority,
-        'Click': window.location.href
-      },
-      body: message
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        topic,
+        title,
+        message,
+        tags: tagArray,
+        priority: Number(priority) || 3,
+        click: window.location.href.startsWith('http') ? window.location.href : 'https://quarterlifekrisis.github.io/expense-splitter/'
+      })
     });
   } catch (err) {
     console.warn('ntfy push failed:', err);
@@ -1585,18 +1588,21 @@ async function sendNtfy({ title, message, tags = 'receipt', priority = '3' }) {
 
 async function testNtfy() {
   const topic = getNtfyTopic();
+  if (!topic) { toast('Please enter a topic name'); return; }
   haptic('medium');
   toast('Sending test alert...');
   try {
-    const res = await fetch(`https://ntfy.sh/${encodeURIComponent(topic)}`, {
+    const res = await fetch('https://ntfy.sh', {
       method: 'POST',
-      headers: {
-        'Title': '🔔 Jombs & Krombs test alert',
-        'Tags': 'tada,sparkles',
-        'Priority': '4',
-        'Click': window.location.href
-      },
-      body: 'Push notifications are connected! Alerts will appear on lockscreen.'
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        topic,
+        title: '🔔 Jombs & Krombs test alert',
+        message: 'Push notifications are connected! Alerts will appear on lockscreen.',
+        tags: ['tada', 'sparkles'],
+        priority: 4,
+        click: window.location.href.startsWith('http') ? window.location.href : 'https://quarterlifekrisis.github.io/expense-splitter/'
+      })
     });
     if (res.ok) {
       toast('Alert sent! Check your phone 📲');
