@@ -82,12 +82,24 @@ header {
 [data-theme="dark"] header {
   background: rgba(11, 12, 14, 0.85);
 }
-.brand { display: flex; flex-direction: column; gap: 1px; }
+.header-left {
+  display: flex;
+  align-items: center;
+  position: relative;
+  min-height: 38px;
+}
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
 .brand-title {
   font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--text);
+  line-height: 1.15;
 }
 .brand-badge {
   font-size: 10px;
@@ -95,51 +107,99 @@ header {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-3);
+  line-height: 1;
+}
+
+/* Sticky due amount following screen on scroll */
+.header-due-pill {
+  position: absolute;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(6px);
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.header-due-amt {
+  font-size: 17.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+.header-due-amt.settled {
+  color: var(--emerald);
+}
+.header-due-sub {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-2);
+  line-height: 1;
+  white-space: nowrap;
+}
+.header-due-sub strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+header.scrolled .brand {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-6px);
+}
+header.scrolled .header-due-pill {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.header-right {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  flex-shrink: 0;
 }
-.version-tag {
-  font-size: 9px;
-  font-weight: 700;
-  color: var(--text-2);
-  padding: 1px 6px;
-  border-radius: var(--radius-pill);
+
+/* Circular header action buttons */
+.header-circle-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
   background: var(--surface-subtle);
   border: 1px solid var(--border);
-  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14.5px;
+  color: var(--text-2);
   cursor: pointer;
-  text-transform: none;
+  padding: 0;
   transition: all 0.15s ease;
-  user-select: none;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
 }
-.version-tag:hover {
+.header-circle-btn:hover {
+  background: var(--surface-hover);
   color: var(--text);
   border-color: var(--border-med);
 }
-.version-tag:active {
-  transform: scale(0.94);
+.header-circle-btn:active {
+  transform: scale(0.92);
 }
-.header-right { display: flex; align-items: center; gap: 8px; }
-
-.header-pill-btn {
-  background: var(--surface-subtle);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  padding: 6px 12px;
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-2);
-  cursor: pointer;
-  display: flex;
+.theme-icon {
+  display: inline-flex;
   align-items: center;
-  gap: 5px;
-  transition: all 0.15s ease;
+  justify-content: center;
+  font-size: 14.5px;
+  line-height: 1;
 }
-.header-pill-btn:hover { background: var(--surface-hover); color: var(--text); border-color: var(--border-med); }
-.header-pill-btn:active { transform: scale(0.96); }
-.theme-icon { font-size: 13px; line-height: 1; }
 
 .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; transition: background 0.3s; flex-shrink: 0; }
 .sync-dot.connected { background: var(--emerald); box-shadow: 0 0 6px rgba(16, 185, 129, 0.4); }
@@ -832,17 +892,20 @@ main {
   </div>
 </div>
 
-<header>
-  <div class="brand">
-    <div class="brand-title">Jombs &amp; Krombs</div>
-    <div class="brand-badge">
-      <span>Expenses</span>
-      <span class="version-tag" onclick="forceAppRefresh()" title="Tap to check for updates / refresh">v2.2</span>
+<header id="main-header">
+  <div class="header-left">
+    <div class="brand">
+      <div class="brand-title">Jombs &amp; Krombs</div>
+      <div class="brand-badge">Expenses</div>
+    </div>
+    <div class="header-due-pill" id="header-due" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Tap to scroll to top">
+      <span class="header-due-amt" id="hdr-amt">£0.00</span>
+      <span class="header-due-sub" id="hdr-sub">All square</span>
     </div>
   </div>
   <div class="header-right">
-    <button class="header-pill-btn" id="ntfy-btn" onclick="openNtfyModal()" title="ntfy push alerts">🔔 ntfy</button>
-    <button class="header-pill-btn" onclick="cycleTheme()" id="theme-btn" title="Toggle theme"><span class="theme-icon">◐</span> Auto</button>
+    <button class="header-circle-btn" id="ntfy-btn" onclick="openNtfyModal()" title="ntfy push alerts" aria-label="ntfy push alerts">🔔</button>
+    <button class="header-circle-btn" onclick="cycleTheme()" id="theme-btn" title="Toggle theme" aria-label="Toggle theme"><span class="theme-icon">◐</span></button>
     <div class="sync-dot" id="sync-dot" title="Connecting..."></div>
   </div>
 </header>
@@ -895,7 +958,7 @@ function showModal({title, body, confirm='Confirm', cancel='Cancel', danger=fals
 function closeModal() { document.getElementById('modal-root').innerHTML = ''; }
 
 // ── Config & Version ────────────────────────────────────────
-const APP_VERSION = '2.2';
+const APP_VERSION = '2.3';
 const CFG_KEY = 'jk_firebase_cfg';
 const PW_KEY = 'jk_auth';
 const CORRECT_PW = 'misterben';
@@ -944,7 +1007,8 @@ async function checkForUpdate() {
     const text = await res.text();
     const match = text.match(/const APP_VERSION = '([^']+)';/);
     if (match && match[1] && match[1] !== APP_VERSION) {
-      toast(`Update available (${match[1]})! Tap v${APP_VERSION} to refresh.`, 6000);
+      toast('Update available. Refreshing...', 3000);
+      setTimeout(forceAppRefresh, 600);
     }
   } catch(e) {}
 }
@@ -1035,6 +1099,21 @@ function render() {
   }
   const last=lastPaidBy();
 
+  // Update sticky header due amount that follows on scroll
+  const hdrAmt = document.getElementById('hdr-amt');
+  const hdrSub = document.getElementById('hdr-sub');
+  if (hdrAmt && hdrSub) {
+    if (canSettle) {
+      hdrAmt.textContent = fmt(settleAmt);
+      hdrAmt.className = 'header-due-amt';
+      hdrSub.innerHTML = `<strong>${settler}</strong> owes <strong>${recipient}</strong>`;
+    } else {
+      hdrAmt.textContent = '£0.00';
+      hdrAmt.className = 'header-due-amt settled';
+      hdrSub.textContent = 'All square';
+    }
+  }
+
   // Live tab — group by month
   const groups={};
   expenses.forEach(e=>{const k=e.monthKey||e.date||'?';if(!groups[k])groups[k]=[];groups[k].push(e);});
@@ -1116,7 +1195,15 @@ function render() {
   if(formOpen)setTimeout(()=>{const el=document.getElementById('f-desc');if(el)el.focus();},50);
   setTimeout(attachSwipeHandlers,0);
   applyTheme();
+  handleScroll();
 }
+
+function handleScroll() {
+  const header = document.getElementById('main-header');
+  if (!header) return;
+  header.classList.toggle('scrolled', window.scrollY > 45);
+}
+window.addEventListener('scroll', handleScroll, { passive: true });
 
 function getImpactHtml(payer, partner, amount, partnerPct) {
   const partnerAmt = +(amount * partnerPct / 100).toFixed(2);
@@ -1558,14 +1645,14 @@ function applyTheme() {
   const btn = document.getElementById('theme-btn');
   if (btn) {
     if (setting === 'auto') {
-      btn.innerHTML = `<span class="theme-icon">◐</span> Auto`;
-      btn.title = `Theme: Following system (${effective === 'dark' ? 'Night' : 'Day'}). Tap to switch to Night.`;
+      btn.innerHTML = `<span class="theme-icon">◐</span>`;
+      btn.title = `Theme: Auto (${effective === 'dark' ? 'Night' : 'Day'}). Tap for Night mode.`;
     } else if (setting === 'dark') {
-      btn.innerHTML = `<span class="theme-icon">☾</span> Night`;
-      btn.title = `Theme: Night mode. Tap to switch to Day.`;
+      btn.innerHTML = `<span class="theme-icon">☾</span>`;
+      btn.title = `Theme: Night mode. Tap for Day mode.`;
     } else {
-      btn.innerHTML = `<span class="theme-icon">☀</span> Day`;
-      btn.title = `Theme: Day mode. Tap to switch to Auto.`;
+      btn.innerHTML = `<span class="theme-icon">☀</span>`;
+      btn.title = `Theme: Day mode. Tap for Auto mode.`;
     }
   }
 }
